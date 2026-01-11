@@ -1,0 +1,10 @@
+package org.example.energie.dao;
+import jakarta.persistence.*;
+
+public class JpaUtil {
+    private static final EntityManagerFactory emf =
+            Persistence.createEntityManagerFactory("energiePU");
+    public static EntityManager getEntityManager() {
+        return emf.createEntityManager();
+    }
+}

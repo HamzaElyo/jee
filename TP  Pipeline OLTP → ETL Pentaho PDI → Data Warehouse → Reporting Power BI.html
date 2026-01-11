@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP : Pipeline OLTP → ETL Pentaho PDI → Data Warehouse → Reporting Power BI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #1a73e8;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            color: #0d6efd;
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 5px solid #0d6efd;
+        }
+
+        h3 {
+            color: #495057;
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        h4 {
+            color: #6c757d;
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #212529;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .note {
+            background-color: #e7f3ff;
+            border-left: 5px solid #1a73e8;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning {
+            background-color: #fff9e6;
+            border-left: 5px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #e8f5e9;
+            border-left: 5px solid #28a745;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #1a73e8;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .step {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .step-number {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+
+        strong {
+            color: #1a73e8;
+        }
+
+        .intro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .intro h1 {
+            color: white;
+            border-bottom: 3px solid white;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="intro">
+            <h1>TP : Pipeline OLTP → ETL Pentaho PDI → Data Warehouse → Reporting Power BI</h1>
+            <p style="font-size: 1.1em; margin-top: 15px;">Un TP complet et détaillé pour maîtriser la chaîne complète de Business Intelligence</p>
+        </div>
+
+        <h2>Introduction</h2>
+        
+        <p>Ce TP complet  vous guidera à travers l'ensemble du processus de Business Intelligence moderne.</p>
+
+        <h3>🔹 OLTP vs OLAP : Comprendre la différence</h3>
+        
+        <p><strong>OLTP (Online Transaction Processing)</strong> : Il s'agit de systèmes optimisés pour gérer les opérations quotidiennes d'une entreprise. Ces bases de données sont normalisées (3FN) pour éviter la redondance et garantir l'intégrité des données. Elles supportent un grand nombre de transactions courtes (INSERT, UPDATE, DELETE) comme l'enregistrement d'une commande client ou la mise à jour d'un stock.</p>
+
+        <p><strong>OLAP (Online Analytical Processing)</strong> : Ces systèmes sont conçus pour l'analyse et le reporting. Ils utilisent des structures dénormalisées (schéma en étoile ou flocon) optimisées pour les requêtes complexes d'agrégation. L'objectif n'est plus de capturer des transactions mais de répondre à des questions analytiques comme "Quel est le chiffre d'affaires par région et par trimestre ?"</p>
+
+        <h3>🔹 Le rôle de Pentaho Data Integration (PDI)</h3>
+        
+        <p>Pentaho PDI, également appelé Kettle, est un outil ETL (Extract, Transform, Load) open-source qui permet de :</p>
+        <ul>
+            <li><strong>Extraire</strong> : Récupérer les données depuis diverses sources (bases de données, fichiers CSV, API, etc.)</li>
+            <li><strong>Transformer</strong> : Nettoyer, enrichir, agréger et convertir les données selon les besoins métier</li>
+            <li><strong>Charger</strong> : Insérer les données transformées dans le Data Warehouse</li>
+        </ul>
+
+        <p>Pentaho utilise une interface graphique intuitive permettant de créer des transformations et des jobs sans nécessiter de code complexe.</p>
+
+        <h3>🔹 Le rôle du Data Warehouse (DWH)</h3>
+        
+        <p>Le Data Warehouse est une base de données centralisée conçue spécifiquement pour l'analyse. Il utilise un <strong>schéma en étoile</strong> composé de :</p>
+        <ul>
+            <li><strong>Tables de faits</strong> : Contiennent les métriques quantitatives (ventes, quantités, montants)</li>
+            <li><strong>Tables de dimensions</strong> : Contiennent les contextes descriptifs (clients, produits, temps, géographie)</li>
+        </ul>
+
+        <p>Cette structure permet des requêtes rapides et une navigation intuitive dans les données pour l'analyse multidimensionnelle.</p>
+
+        <h3>🔹 Le rôle de Power BI</h3>
+        
+        <p>Power BI est l'outil de visualisation et de reporting de Microsoft. Il permet de :</p>
+        <ul>
+            <li>Se connecter directement au Data Warehouse</li>
+            <li>Créer des tableaux de bord interactifs</li>
+            <li>Générer des rapports visuels dynamiques</li>
+            <li>Partager les analyses avec les décideurs</li>
+        </ul>
+
+
+
+        <h2>Scénario Métier</h2>
+        
+        <p>Nous allons travailler sur un cas réel d'une entreprise e-commerce fictive nommée <strong>"TechStore"</strong>.</p>
+
+        <h3>Contexte</h3>
+        <p>TechStore vend des produits électroniques et informatiques en ligne. L'entreprise possède une base de données opérationnelle (OLTP) qui enregistre toutes les transactions quotidiennes : inscriptions clients, créations de produits, passation de commandes, etc.</p>
+
+        <h3>Problématique</h3>
+        <p>La direction de TechStore souhaite répondre aux questions analytiques suivantes :</p>
+        <ul>
+            <li>Quel est le chiffre d'affaires par ville ?</li>
+            <li>Quelles catégories de produits génèrent le plus de revenus ?</li>
+            <li>Comment évoluent les ventes mois par mois ?</li>
+            <li>Quels sont les 10 produits les plus vendus ?</li>
+            <li>Quel est le montant moyen des commandes par client ?</li>
+        </ul>
+
+        <h3>Structure des données OLTP</h3>
+        <p>La base de données opérationnelle contient quatre tables principales :</p>
+
+        <table>
+            <tr>
+                <th>Table</th>
+                <th>Description</th>
+                <th>Contenu</th>
+            </tr>
+            <tr>
+                <td><strong>clients</strong></td>
+                <td>Informations sur les clients</td>
+                <td>ID, nom, prénom, email, ville, date d'inscription</td>
+            </tr>
+            <tr>
+                <td><strong>produits</strong></td>
+                <td>Catalogue des produits</td>
+                <td>ID, nom, catégorie, prix unitaire</td>
+            </tr>
+            <tr>
+                <td><strong>commandes</strong></td>
+                <td>En-tête des commandes</td>
+                <td>ID, ID client, date commande, montant total</td>
+            </tr>
+            <tr>
+                <td><strong>lignes_commandes</strong></td>
+                <td>Détail des produits commandés</td>
+                <td>ID, ID commande, ID produit, quantité, prix unitaire</td>
+            </tr>
+        </table>
+
+        <h3>Objectifs d'analyse</h3>
+        <p>Nous allons construire un Data Warehouse permettant d'analyser :</p>
+        <ul>
+            <li>Les performances commerciales par dimension géographique (ville)</li>
+            <li>Les performances par catégorie de produit</li>
+            <li>L'évolution temporelle des ventes (année, trimestre, mois, jour)</li>
+            <li>Le comportement d'achat des clients</li>
+        </ul>
+
+        <h2>Architecture Globale du Projet</h2>
+
+        <p>Voici une vue d'ensemble de l'architecture que nous allons mettre en place :</p>
+
+        <div class="mermaid">
+            graph LR
+                A["🗄️ Base OLTP MySQL<br/><b>ventes_oltp</b><br/>(Transactionnel)"] 
+                B["🔄 Pentaho PDI<br/><b>ETL</b><br/>(Extract-Transform-Load)"]
+                C["📊 Data Warehouse MySQL<br/><b>ventes_dwh</b><br/>(Schéma en Étoile)"]
+                D["📈 Power BI<br/><b>Reporting</b><br/>(Dashboards Interactifs)"]
+                
+                A -->|"Extraction des<br/>données brutes"| B
+                B -->|"Chargement des<br/>données transformées"| C
+                C -->|"Connexion et<br/>analyse"| D
+                
+                style A fill:#ff9999,stroke:#cc0000,stroke-width:3px
+                style B fill:#99ccff,stroke:#0066cc,stroke-width:3px
+                style C fill:#99ff99,stroke:#00cc00,stroke-width:3px
+                style D fill:#ffcc99,stroke:#ff9900,stroke-width:3px
+            </div>
+
+        <h2>Modèle OLTP - Base Transactionnelle</h2>
+
+        <h3>🔹 Description détaillée des tables</h3>
+
+        <h4>Table : clients</h4>
+        <p>Stocke les informations des clients inscrits sur la plateforme TechStore.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_client</td>
+                <td>INT</td>
+                <td>Clé primaire auto-incrémentée</td>
+            </tr>
+            <tr>
+                <td>nom</td>
+                <td>VARCHAR(100)</td>
+                <td>Nom de famille du client</td>
+            </tr>
+            <tr>
+                <td>prenom</td>
+                <td>VARCHAR(100)</td>
+                <td>Prénom du client</td>
+            </tr>
+            <tr>
+                <td>email</td>
+                <td>VARCHAR(150)</td>
+                <td>Adresse email unique</td>
+            </tr>
+            <tr>
+                <td>ville</td>
+                <td>VARCHAR(100)</td>
+                <td>Ville de résidence</td>
+            </tr>
+            <tr>
+                <td>date_inscription</td>
+                <td>DATE</td>
+                <td>Date d'inscription du client</td>
+            </tr>
+        </table>
+
+        <h4>Table : produits</h4>
+        <p>Contient le catalogue complet des produits vendus.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_produit</td>
+                <td>INT</td>
+                <td>Clé primaire auto-incrémentée</td>
+            </tr>
+            <tr>
+                <td>nom_produit</td>
+                <td>VARCHAR(200)</td>
+                <td>Nom commercial du produit</td>
+            </tr>
+            <tr>
+                <td>categorie</td>
+                <td>VARCHAR(100)</td>
+                <td>Catégorie (Ordinateurs, Téléphones, etc.)</td>
+            </tr>
+            <tr>
+                <td>prix_unitaire</td>
+                <td>DECIMAL(10,2)</td>
+                <td>Prix de vente unitaire</td>
+            </tr>
+        </table>
+
+        <h4>Table : commandes</h4>
+        <p>En-tête des commandes passées par les clients.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_commande</td>
+                <td>INT</td>
+                <td>Clé primaire auto-incrémentée</td>
+            </tr>
+            <tr>
+                <td>id_client</td>
+                <td>INT</td>
+                <td>Clé étrangère vers clients</td>
+            </tr>
+            <tr>
+                <td>date_commande</td>
+                <td>DATE</td>
+                <td>Date de la commande</td>
+            </tr>
+            <tr>
+                <td>montant_total</td>
+                <td>DECIMAL(10,2)</td>
+                <td>Montant total de la commande</td>
+            </tr>
+        </table>
+
+        <h4>Table : lignes_commandes</h4>
+        <p>Détail des produits contenus dans chaque commande.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_ligne</td>
+                <td>INT</td>
+                <td>Clé primaire auto-incrémentée</td>
+            </tr>
+            <tr>
+                <td>id_commande</td>
+                <td>INT</td>
+                <td>Clé étrangère vers commandes</td>
+            </tr>
+            <tr>
+                <td>id_produit</td>
+                <td>INT</td>
+                <td>Clé étrangère vers produits</td>
+            </tr>
+            <tr>
+                <td>quantite</td>
+                <td>INT</td>
+                <td>Quantité commandée</td>
+            </tr>
+            <tr>
+                <td>prix_unitaire</td>
+                <td>DECIMAL(10,2)</td>
+                <td>Prix unitaire au moment de la commande</td>
+            </tr>
+        </table>
+
+        <h3>🔹 Diagramme ERD (Entity Relationship Diagram)</h3>
+
+        <div class="mermaid">
+            graph TB
+                subgraph "BASE DE DONNÉES OLTP - ventes_oltp"
+                    C["<b>CLIENTS</b><br/>────────────<br/>🔑 id_client (PK)<br/>• nom<br/>• prenom<br/>• email<br/>• ville<br/>• date_inscription"]
+                    P["<b>PRODUITS</b><br/>────────────<br/>🔑 id_produit (PK)<br/>• nom_produit<br/>• categorie<br/>• prix_unitaire"]
+                    CMD["<b>COMMANDES</b><br/>────────────<br/>🔑 id_commande (PK)<br/>🔗 id_client (FK)<br/>• date_commande<br/>• montant_total"]
+                    LC["<b>LIGNES_COMMANDES</b><br/>────────────<br/>🔑 id_ligne (PK)<br/>🔗 id_commande (FK)<br/>🔗 id_produit (FK)<br/>• quantite<br/>• prix_unitaire"]
+                end
+                
+                C -->|"1 client<br/>⬇️<br/>0..N commandes"| CMD
+                CMD -->|"1 commande<br/>⬇️<br/>1..N lignes"| LC
+                P -->|"1 produit<br/>⬇️<br/>0..N lignes"| LC
+                
+                style C fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                style P fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+                style CMD fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+                style LC fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+            </div>
+            
+            <div class="note">
+                <strong>Les relations entre les tables:</strong>
+                <ul>
+                    <li><strong>CLIENTS (1) ──→ (0..N) COMMANDES</strong><br/>
+                        ➜ Un client peut passer <strong>zéro ou plusieurs</strong> commandes<br/>
+                        ➜ Une commande appartient à <strong>un seul</strong> client
+                    </li>
+                    <li><strong>COMMANDES (1) ──→ (1..N) LIGNES_COMMANDES</strong><br/>
+                        ➜ Une commande contient <strong>au moins une</strong> ligne de commande<br/>
+                        ➜ Une ligne appartient à <strong>une seule</strong> commande
+                    </li>
+                    <li><strong>PRODUITS (1) ──→ (0..N) LIGNES_COMMANDES</strong><br/>
+                        ➜ Un produit peut être dans <strong>zéro ou plusieurs</strong> lignes<br/>
+                        ➜ Une ligne concerne <strong>un seul</strong> produit
+                    </li>
+                </ul>
+            </div>
+
+        <h2>Script SQL Complet - Base OLTP</h2>
+
+        <p>Voici le script SQL complet pour créer la base de données transactionnelle. Copiez et exécutez ce script dans MySQL Workbench.</p>
+
+        <pre><code>-- ========================================
+-- CRÉATION DE LA BASE DE DONNÉES OLTP
+-- ========================================
+
+DROP DATABASE IF EXISTS ventes_oltp;
+CREATE DATABASE ventes_oltp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ventes_oltp;
+
+-- ========================================
+-- TABLE : clients
+-- ========================================
+CREATE TABLE clients (
+    id_client INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    prenom VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    ville VARCHAR(100) NOT NULL,
+    date_inscription DATE NOT NULL,
+    INDEX idx_ville (ville),
+    INDEX idx_date_inscription (date_inscription)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- TABLE : produits
+-- ========================================
+CREATE TABLE produits (
+    id_produit INT AUTO_INCREMENT PRIMARY KEY,
+    nom_produit VARCHAR(200) NOT NULL,
+    categorie VARCHAR(100) NOT NULL,
+    prix_unitaire DECIMAL(10,2) NOT NULL,
+    INDEX idx_categorie (categorie)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- TABLE : commandes
+-- ========================================
+CREATE TABLE commandes (
+    id_commande INT AUTO_INCREMENT PRIMARY KEY,
+    id_client INT NOT NULL,
+    date_commande DATE NOT NULL,
+    montant_total DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_client) REFERENCES clients(id_client) ON DELETE CASCADE,
+    INDEX idx_client (id_client),
+    INDEX idx_date (date_commande)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- TABLE : lignes_commandes
+-- ========================================
+CREATE TABLE lignes_commandes (
+    id_ligne INT AUTO_INCREMENT PRIMARY KEY,
+    id_commande INT NOT NULL,
+    id_produit INT NOT NULL,
+    quantite INT NOT NULL,
+    prix_unitaire DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_commande) REFERENCES commandes(id_commande) ON DELETE CASCADE,
+    FOREIGN KEY (id_produit) REFERENCES produits(id_produit) ON DELETE CASCADE,
+    INDEX idx_commande (id_commande),
+    INDEX idx_produit (id_produit)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- VÉRIFICATION DE LA STRUCTURE
+-- ========================================
+SHOW TABLES;
+DESCRIBE clients;
+DESCRIBE produits;
+DESCRIBE commandes;
+DESCRIBE lignes_commandes;</code></pre>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> Vous devriez voir 4 tables créées dans la base ventes_oltp. Les relations entre tables sont établies via les clés étrangères.
+        </div>
+
+        <h2>🔢 Génération d'un Dataset de 100 000 lignes</h2>
+
+        <p>Pour que notre TP soit réaliste, nous allons générer un jeu de données conséquent. Nous utiliserons Python avec la bibliothèque Faker pour créer des données synthétiques.</p>
+
+        <div class="warning">
+            <strong>Important :</strong> Nous n'afficherons pas les 100 000 lignes ! Nous allons générer les fichiers CSV, puis vous montrerons seulement quelques exemples pour comprendre la structure.
+        </div>
+
+        <h3>🔹 Script Python complet</h3>
+
+        <p>Installez d'abord les dépendances nécessaires :</p>
+
+        <pre><code>pip install faker pandas</code></pre>
+
+        <p>Ensuite, créez un fichier <code>generate_data.py</code> avec le contenu suivant :</p>
+
+        <pre><code>import pandas as pd
+from faker import Faker
+import random
+from datetime import datetime, timedelta
+
+# Initialisation
+fake = Faker('fr_FR')
+random.seed(42)
+Faker.seed(42)
+
+print("Génération des données en cours...")
+
+# ========================================
+# GÉNÉRATION DES CLIENTS (10 000)
+# ========================================
+print("Génération de 10 000 clients...")
+
+villes = ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice', 'Nantes', 
+          'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille', 'Rennes', 'Reims']
+
+clients_data = []
+for i in range(1, 10001):
+    clients_data.append({
+        'id_client': i,
+        'nom': fake.last_name(),
+        'prenom': fake.first_name(),
+        'email': f"client{i}@{fake.free_email_domain()}",
+        'ville': random.choice(villes),
+        'date_inscription': fake.date_between(start_date='-3y', end_date='today')
+    })
+
+df_clients = pd.DataFrame(clients_data)
+df_clients.to_csv('clients.csv', index=False, encoding='utf-8')
+print(f"Fichier clients.csv créé : {len(df_clients)} lignes")
+
+# ========================================
+# GÉNÉRATION DES PRODUITS (500)
+# ========================================
+print("Génération de 500 produits...")
+
+categories = {
+    'Ordinateurs': ['MacBook Pro', 'Dell XPS', 'HP Pavilion', 'Lenovo ThinkPad', 'Asus VivoBook'],
+    'Téléphones': ['iPhone 14', 'Samsung Galaxy S23', 'Google Pixel 7', 'OnePlus 11', 'Xiaomi 13'],
+    'Tablettes': ['iPad Pro', 'Samsung Galaxy Tab', 'Microsoft Surface', 'Lenovo Tab', 'Huawei MatePad'],
+    'Accessoires': ['Souris Logitech', 'Clavier mécanique', 'Casque Bose', 'Webcam HD', 'Hub USB-C'],
+    'Montres': ['Apple Watch', 'Samsung Galaxy Watch', 'Garmin Forerunner', 'Fitbit Sense', 'Huawei Watch']
+}
+
+produits_data = []
+id_produit = 1
+for categorie, noms_base in categories.items():
+    for _ in range(100):  # 100 produits par catégorie
+        nom_base = random.choice(noms_base)
+        produits_data.append({
+            'id_produit': id_produit,
+            'nom_produit': f"{nom_base} {random.choice(['Pro', 'Plus', 'Ultra', 'Standard', 'Lite'])}",
+            'categorie': categorie,
+            'prix_unitaire': round(random.uniform(50, 2000), 2)
+        })
+        id_produit += 1
+
+df_produits = pd.DataFrame(produits_data)
+df_produits.to_csv('produits.csv', index=False, encoding='utf-8')
+print(f"Fichier produits.csv créé : {len(df_produits)} lignes")
+
+# ========================================
+# GÉNÉRATION DES COMMANDES (20 000)
+# ========================================
+print("Génération de 20 000 commandes...")
+
+commandes_data = []
+start_date = datetime(2022, 1, 1)
+end_date = datetime(2024, 12, 31)
+
+for i in range(1, 20001):
+    random_days = random.randint(0, (end_date - start_date).days)
+    date_commande = start_date + timedelta(days=random_days)
+    
+    commandes_data.append({
+        'id_commande': i,
+        'id_client': random.randint(1, 10000),
+        'date_commande': date_commande.strftime('%Y-%m-%d'),
+        'montant_total': 0  # Sera calculé plus tard
+    })
+
+df_commandes = pd.DataFrame(commandes_data)
+
+# ========================================
+# GÉNÉRATION DES LIGNES DE COMMANDES (100 000)
+# ========================================
+print("Génération de 100 000 lignes de commandes...")
+
+lignes_data = []
+montants_par_commande = {}
+
+for i in range(1, 100001):
+    id_commande = random.randint(1, 20000)
+    id_produit = random.randint(1, 500)
+    quantite = random.randint(1, 5)
+    prix_unitaire = df_produits.loc[df_produits['id_produit'] == id_produit, 'prix_unitaire'].values[0]
+    
+    lignes_data.append({
+        'id_ligne': i,
+        'id_commande': id_commande,
+        'id_produit': id_produit,
+        'quantite': quantite,
+        'prix_unitaire': prix_unitaire
+    })
+    
+    # Calcul du montant total de la commande
+    montant_ligne = quantite * prix_unitaire
+    if id_commande in montants_par_commande:
+        montants_par_commande[id_commande] += montant_ligne
+    else:
+        montants_par_commande[id_commande] = montant_ligne
+
+df_lignes = pd.DataFrame(lignes_data)
+df_lignes.to_csv('lignes_commandes.csv', index=False, encoding='utf-8')
+print(f"Fichier lignes_commandes.csv créé : {len(df_lignes)} lignes")
+
+# Mise à jour des montants totaux dans commandes
+df_commandes['montant_total'] = df_commandes['id_commande'].map(
+    lambda x: round(montants_par_commande.get(x, 0), 2)
+)
+df_commandes.to_csv('commandes.csv', index=False, encoding='utf-8')
+print(f"Fichier commandes.csv créé : {len(df_commandes)} lignes")
+
+print("\nGénération terminée avec succès !")
+print("Fichiers créés : clients.csv, produits.csv, commandes.csv, lignes_commandes.csv")</code></pre>
+
+        <h3>🔹 Exécution du script</h3>
+
+        <div class="step">
+            <p class="step-number">Étape 1 :</p>
+            <p>Ouvrez votre terminal ou invite de commande</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 2 :</p>
+            <p>Naviguez vers le dossier contenant le fichier <code>generate_data.py</code></p>
+            <pre><code>cd chemin/vers/votre/dossier</code></pre>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 3 :</p>
+            <p>Exécutez le script Python</p>
+            <pre><code>python generate_data.py</code></pre>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 4 :</p>
+            <p>Attendez quelques secondes. Vous verrez les messages de progression s'afficher</p>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> Quatre fichiers CSV sont créés dans votre dossier : clients.csv, produits.csv, commandes.csv, et lignes_commandes.csv
+        </div>
+
+        <h3>🔹 Aperçu des données générées</h3>
+
+        <p>Voici quelques exemples de lignes pour comprendre la structure des données :</p>
+
+        <h4>Extrait de clients.csv (5 premières lignes)</h4>
+        <pre><code>id_client,nom,prenom,email,ville,date_inscription
+1,Dupont,Marie,client1@gmail.com,Paris,2023-05-12
+2,Martin,Pierre,client2@yahoo.fr,Lyon,2022-08-23
+3,Bernard,Sophie,client3@outlook.com,Marseille,2024-01-15
+4,Dubois,Luc,client4@gmail.com,Toulouse,2023-11-08
+5,Thomas,Julie,client5@orange.fr,Nice,2022-03-19</code></pre>
+
+        <h4>Extrait de produits.csv (5 premières lignes)</h4>
+        <pre><code>id_produit,nom_produit,categorie,prix_unitaire
+1,MacBook Pro Ultra,Ordinateurs,1899.99
+2,Dell XPS Plus,Ordinateurs,1299.50
+3,HP Pavilion Standard,Ordinateurs,799.99
+4,Lenovo ThinkPad Pro,Ordinateurs,1450.00
+5,Asus VivoBook Lite,Ordinateurs,649.99</code></pre>
+
+        <h4>Extrait de commandes.csv (5 premières lignes)</h4>
+        <pre><code>id_commande,id_client,date_commande,montant_total
+1,3542,2023-07-15,2349.98
+2,8901,2024-02-28,899.99
+3,1234,2022-11-12,3599.97
+4,5678,2023-09-05,1249.50
+5,9012,2024-06-18,4599.95</code></pre>
+
+        <h4>Extrait de lignes_commandes.csv (5 premières lignes)</h4>
+        <pre><code>id_ligne,id_commande,id_produit,quantite,prix_unitaire
+1,1,45,2,899.99
+2,1,128,1,549.00
+3,2,203,1,899.99
+4,3,12,3,1199.99
+5,4,76,1,1249.50</code></pre>
+
+        <div class="note">
+            <strong>Remarques importantes :</strong>
+            <ul>
+                <li>Les données sont générées de manière <strong>cohérente</strong> : les id_client et id_produit référencent bien les tables correspondantes</li>
+                <li>Les dates sont réparties sur une période de <strong>3 ans</strong> (2022-2024)</li>
+                <li>Les prix sont <strong>réalistes</strong> pour un commerce électronique</li>
+                <li>Le montant_total des commandes correspond à la somme des lignes_commandes</li>
+            </ul>
+        </div>
+
+        <h2>Importation des CSV dans MySQL</h2>
+
+        <p>Maintenant que nous avons généré nos fichiers CSV, nous allons les importer dans la base de données MySQL. Voici un tutoriel détaillé pour débutants.</p>
+
+        <div class="warning">
+            <strong>Prérequis :</strong> MySQL et MySQL Workbench doivent être installés sur votre machine. La base ventes_oltp doit avoir été créée avec le script SQL précédent.
+        </div>
+
+        <h3>🔹 Méthode 1 : Importation via MySQL Workbench (Recommandée)</h3>
+
+        <div class="step">
+            <p class="step-number">Étape 1 : Ouvrir MySQL Workbench</p>
+            <p>Lancez MySQL Workbench et connectez-vous à votre serveur MySQL local</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 2 : Sélectionner la base de données</p>
+            <p>Dans le panneau de gauche (Navigator), cliquez sur <strong>Schemas</strong>, puis double-cliquez sur <strong>ventes_oltp</strong> pour la sélectionner</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 3 : Importer clients.csv</p>
+            <ol>
+                <li>Clic droit sur la table <strong>clients</strong> → <strong>Table Data Import Wizard</strong></li>
+                <li>Cliquez sur <strong>Browse</strong> et sélectionnez le fichier <strong>clients.csv</strong></li>
+                <li>Cliquez sur <strong>Next</strong></li>
+                <li>Sélectionnez <strong>Use existing table : ventes_oltp.clients</strong></li>
+                <li>Cliquez sur <strong>Next</strong></li>
+                <li>Vérifiez que les colonnes correspondent correctement (MySQL Workbench fait généralement la correspondance automatiquement)</li>
+                <li>Cliquez sur <strong>Next</strong> puis <strong>Next</strong> à nouveau</li>
+                <li>Attendez la fin de l'importation (quelques secondes pour 10 000 lignes)</li>
+                <li>Cliquez sur <strong>Finish</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 4 : Importer produits.csv</p>
+            <p>Répétez exactement les mêmes étapes que pour clients.csv, mais en sélectionnant la table <strong>produits</strong> et le fichier <strong>produits.csv</strong></p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 5 : Importer commandes.csv</p>
+            <p>Répétez les étapes pour la table <strong>commandes</strong> et le fichier <strong>commandes.csv</strong></p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 6 : Importer lignes_commandes.csv</p>
+            <p>Répétez les étapes pour la table <strong>lignes_commandes</strong> et le fichier <strong>lignes_commandes.csv</strong></p>
+            <p><strong>Note :</strong> Cette importation peut prendre 1-2 minutes car il y a 100 000 lignes</p>
+        </div>
+
+        <h3>🔹 Méthode 2 : Importation via SQL LOAD DATA (Alternative)</h3>
+
+        <p>Si vous préférez utiliser des commandes SQL, voici le script :</p>
+
+        <pre><code>USE ventes_oltp;
+
+-- Désactiver temporairement les contraintes
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Importer clients
+LOAD DATA LOCAL INFILE 'C:/chemin/vers/clients.csv'
+INTO TABLE clients
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id_client, nom, prenom, email, ville, date_inscription);
+
+-- Importer produits
+LOAD DATA LOCAL INFILE 'C:/chemin/vers/produits.csv'
+INTO TABLE produits
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id_produit, nom_produit, categorie, prix_unitaire);
+
+-- Importer commandes
+LOAD DATA LOCAL INFILE 'C:/chemin/vers/commandes.csv'
+INTO TABLE commandes
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id_commande, id_client, date_commande, montant_total);
+
+-- Importer lignes_commandes
+LOAD DATA LOCAL INFILE 'C:/chemin/vers/lignes_commandes.csv'
+INTO TABLE lignes_commandes
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id_ligne, id_commande, id_produit, quantite, prix_unitaire);
+
+-- Réactiver les contraintes
+SET FOREIGN_KEY_CHECKS = 1;</code></pre>
+
+        <div class="warning">
+            <strong>Attention :</strong> Remplacez <code>C:/chemin/vers/</code> par le chemin réel où se trouvent vos fichiers CSV. Utilisez des slashes (/) même sous Windows dans les chemins MySQL.
+        </div>
+
+        <h3>🔹 Vérification de l'importation</h3>
+
+        <p>Après l'importation, vérifiez que tout s'est bien passé avec ces requêtes :</p>
+
+        <pre><code>USE ventes_oltp;
+
+-- Compter les lignes de chaque table
+SELECT 'clients' AS table_name, COUNT(*) AS nb_lignes FROM clients
+UNION ALL
+SELECT 'produits', COUNT(*) FROM produits
+UNION ALL
+SELECT 'commandes', COUNT(*) FROM commandes
+UNION ALL
+SELECT 'lignes_commandes', COUNT(*) FROM lignes_commandes;
+
+-- Afficher quelques exemples
+SELECT * FROM clients LIMIT 5;
+SELECT * FROM produits LIMIT 5;
+SELECT * FROM commandes LIMIT 5;
+SELECT * FROM lignes_commandes LIMIT 5;</code></pre>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong>
+            <ul>
+                <li>clients : 10 000 lignes</li>
+                <li>produits : 500 lignes</li>
+                <li>commandes : 20 000 lignes</li>
+                <li>lignes_commandes : 100 000 lignes</li>
+            </ul>
+        </div>
+
+        <h2>Data Warehouse - Schéma en Étoile</h2>
+
+        <p>Nous allons maintenant concevoir notre Data Warehouse avec un <strong>schéma en étoile</strong> (Star Schema). Cette structure est optimisée pour les requêtes analytiques et les outils de BI.</p>
+
+        <h3>🔹 Pourquoi un schéma en étoile ?</h3>
+
+        <table>
+            <tr>
+                <th>Avantage</th>
+                <th>Explication</th>
+            </tr>
+            <tr>
+                <td>Simplicité</td>
+                <td>Structure intuitive avec une table de faits centrale et des dimensions autour</td>
+            </tr>
+            <tr>
+                <td>Performance</td>
+                <td>Moins de jointures nécessaires, requêtes plus rapides</td>
+            </tr>
+            <tr>
+                <td>Compréhension</td>
+                <td>Les utilisateurs métier comprennent facilement le modèle</td>
+            </tr>
+            <tr>
+                <td>Compatibilité</td>
+                <td>Optimal pour les outils de BI comme Power BI, Tableau, QlikView</td>
+            </tr>
+        </table>
+
+        <h3>🔹 Description des tables du Data Warehouse</h3>
+
+        <h4>Table de faits : FactVentes</h4>
+        <p>La table centrale contenant les métriques quantitatives.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_vente</td>
+                <td>INT</td>
+                <td>Clé primaire (surrogate key)</td>
+            </tr>
+            <tr>
+                <td>id_client_dim</td>
+                <td>INT</td>
+                <td>Clé étrangère vers DimClient</td>
+            </tr>
+            <tr>
+                <td>id_produit_dim</td>
+                <td>INT</td>
+                <td>Clé étrangère vers DimProduit</td>
+            </tr>
+            <tr>
+                <td>id_date_dim</td>
+                <td>INT</td>
+                <td>Clé étrangère vers DimDate</td>
+            </tr>
+            <tr>
+                <td>quantite</td>
+                <td>INT</td>
+                <td>Quantité vendue</td>
+            </tr>
+            <tr>
+                <td>prix_unitaire</td>
+                <td>DECIMAL(10,2)</td>
+                <td>Prix unitaire</td>
+            </tr>
+            <tr>
+                <td>montant_total</td>
+                <td>DECIMAL(10,2)</td>
+                <td>Montant total (quantité × prix)</td>
+            </tr>
+        </table>
+
+        <h4>Dimension : DimClient</h4>
+        <p>Contient les informations descriptives sur les clients.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_client_dim</td>
+                <td>INT</td>
+                <td>Clé surrogate (auto-incrémentée)</td>
+            </tr>
+            <tr>
+                <td>id_client_source</td>
+                <td>INT</td>
+                <td>Clé naturelle (ID depuis OLTP)</td>
+            </tr>
+            <tr>
+                <td>nom_complet</td>
+                <td>VARCHAR(200)</td>
+                <td>Nom et prénom concaténés</td>
+            </tr>
+            <tr>
+                <td>email</td>
+                <td>VARCHAR(150)</td>
+                <td>Email du client</td>
+            </tr>
+            <tr>
+                <td>ville</td>
+                <td>VARCHAR(100)</td>
+                <td>Ville de résidence</td>
+            </tr>
+        </table>
+
+        <h4>Dimension : DimProduit</h4>
+        <p>Contient les informations descriptives sur les produits.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_produit_dim</td>
+                <td>INT</td>
+                <td>Clé surrogate (auto-incrémentée)</td>
+            </tr>
+            <tr>
+                <td>id_produit_source</td>
+                <td>INT</td>
+                <td>Clé naturelle (ID depuis OLTP)</td>
+            </tr>
+            <tr>
+                <td>nom_produit</td>
+                <td>VARCHAR(200)</td>
+                <td>Nom du produit</td>
+            </tr>
+            <tr>
+                <td>categorie</td>
+                <td>VARCHAR(100)</td>
+                <td>Catégorie du produit</td>
+            </tr>
+        </table>
+
+        <h4>Dimension : DimDate</h4>
+        <p>Table de dates précalculées permettant une analyse temporelle riche.</p>
+        <table>
+            <tr>
+                <th>Colonne</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>id_date_dim</td>
+                <td>INT</td>
+                <td>Clé surrogate (format YYYYMMDD)</td>
+            </tr>
+            <tr>
+                <td>date_complete</td>
+                <td>DATE</td>
+                <td>Date complète</td>
+            </tr>
+            <tr>
+                <td>annee</td>
+                <td>INT</td>
+                <td>Année (ex: 2024)</td>
+            </tr>
+            <tr>
+                <td>trimestre</td>
+                <td>INT</td>
+                <td>Trimestre (1-4)</td>
+            </tr>
+            <tr>
+                <td>mois</td>
+                <td>INT</td>
+                <td>Mois (1-12)</td>
+            </tr>
+            <tr>
+                <td>nom_mois</td>
+                <td>VARCHAR(20)</td>
+                <td>Nom du mois (Janvier, Février...)</td>
+            </tr>
+            <tr>
+                <td>jour</td>
+                <td>INT</td>
+                <td>Jour du mois (1-31)</td>
+            </tr>
+            <tr>
+                <td>jour_semaine</td>
+                <td>INT</td>
+                <td>Jour de la semaine (1=Lundi, 7=Dimanche)</td>
+            </tr>
+            <tr>
+                <td>nom_jour</td>
+                <td>VARCHAR(20)</td>
+                <td>Nom du jour (Lundi, Mardi...)</td>
+            </tr>
+        </table>
+
+        <h3>🔹 Schéma en Étoile - Diagramme Mermaid</h3>
+
+        <div class="mermaid">
+            graph TB
+                subgraph "DATA WAREHOUSE - Schéma en Étoile"
+                    FACT["<b>FACT VENTES</b><br/>(Table de Faits)<br/>════════════════<br/>🔑 id_vente (PK)<br/>🔗 id_client_dim (FK)<br/>🔗 id_produit_dim (FK)<br/>🔗 id_date_dim (FK)<br/>━━━━━━━━━━━━━━━━<br/>📈 quantite<br/>📈 prix_unitaire<br/>📈 montant_total"]
+                    
+                    DC["<b>DIM CLIENT</b><br/>(Dimension)<br/>════════════════<br/>🔑 id_client_dim (PK)<br/>• id_client_source<br/>• nom_complet<br/>• email<br/>• ville"]
+                    
+                    DP["<b>DIM PRODUIT</b><br/>(Dimension)<br/>════════════════<br/>🔑 id_produit_dim (PK)<br/>• id_produit_source<br/>• nom_produit<br/>• categorie"]
+                    
+                    DD["<b>DIM DATE</b><br/>(Dimension)<br/>════════════════<br/>🔑 id_date_dim (PK)<br/>• date_complete<br/>• annee<br/>• trimestre<br/>• mois<br/>• nom_mois<br/>• jour<br/>• jour_semaine<br/>• nom_jour"]
+                end
+                
+                DC -->|"<b>1 client</b><br/>⬇️<br/><b>N ventes</b>"| FACT
+                DP -->|"<b>1 produit</b><br/>⬇️<br/><b>N ventes</b>"| FACT
+                DD -->|"<b>1 date</b><br/>⬇️<br/><b>N ventes</b>"| FACT
+                
+                style FACT fill:#fff9c4,stroke:#f57f17,stroke-width:4px
+                style DC fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+                style DP fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+                style DD fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+            </div>
+            
+            <div class="note">
+                <strong>Détail du schéma en étoile :</strong>
+                <ul>
+                    <li><strong>DimClient (1) ──→ (N) FactVentes</strong><br/>
+                        ➜ Un client peut avoir <strong>plusieurs ventes</strong> dans la table de faits<br/>
+                        ➜ Chaque vente est associée à <strong>un seul client</strong><br/>
+                        ➜ <em>Relation : 1:N (un à plusieurs)</em>
+                    </li>
+                    <li><strong>DimProduit (1) ──→ (N) FactVentes</strong><br/>
+                        ➜ Un produit peut apparaître dans <strong>plusieurs ventes</strong><br/>
+                        ➜ Chaque vente concerne <strong>un seul produit</strong><br/>
+                        ➜ <em>Relation : 1:N (un à plusieurs)</em>
+                    </li>
+                    <li><strong>DimDate (1) ──→ (N) FactVentes</strong><br/>
+                        ➜ Une date peut avoir <strong>plusieurs ventes</strong><br/>
+                        ➜ Chaque vente est enregistrée à <strong>une seule date</strong><br/>
+                        ➜ <em>Relation : 1:N (un à plusieurs)</em>
+                    </li>
+                </ul>
+                <p><strong>Principe du schéma en étoile :</strong> Toutes les dimensions (DimClient, DimProduit, DimDate) sont reliées directement à la table de faits centrale (FactVentes) avec des relations <strong>1:N</strong>. C'est cette structure qui donne la forme d'une "étoile"  et optimise les performances des requêtes analytiques.</p>
+            </div>
+
+        <div class="note">
+            <strong>Remarques sur le schéma en étoile :</strong>
+            <ul>
+                <li><strong>Clés surrogates</strong> : Nous utilisons des clés artificielles (id_xxx_dim) pour garantir l'unicité et faciliter les mises à jour</li>
+                <li><strong>Dénormalisation</strong> : Les dimensions contiennent des données redondantes (ex: nom_mois) pour accélérer les requêtes</li>
+                <li><strong>DimDate</strong> : Cette dimension est générée artificiellement et n'existe pas dans l'OLTP</li>
+                <li><strong>FactVentes</strong> : Contient uniquement des clés étrangères et des métriques numériques</li>
+            </ul>
+        </div>
+
+        <h2>Script SQL Complet du Data Warehouse</h2>
+
+        <p>Voici le script SQL pour créer la structure du Data Warehouse. Ce script prépare les tables vides qui seront alimentées par Pentaho.</p>
+
+        <pre><code>-- ========================================
+-- CRÉATION DE LA BASE DE DONNÉES DWH
+-- ========================================
+
+DROP DATABASE IF EXISTS ventes_dwh;
+CREATE DATABASE ventes_dwh CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ventes_dwh;
+
+-- ========================================
+-- DIMENSION : DimClient
+-- ========================================
+CREATE TABLE DimClient (
+    id_client_dim INT AUTO_INCREMENT PRIMARY KEY,
+    id_client_source INT NOT NULL,
+    nom_complet VARCHAR(200) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    ville VARCHAR(100) NOT NULL,
+    UNIQUE KEY uk_client_source (id_client_source),
+    INDEX idx_ville (ville)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- DIMENSION : DimProduit
+-- ========================================
+CREATE TABLE DimProduit (
+    id_produit_dim INT AUTO_INCREMENT PRIMARY KEY,
+    id_produit_source INT NOT NULL,
+    nom_produit VARCHAR(200) NOT NULL,
+    categorie VARCHAR(100) NOT NULL,
+    UNIQUE KEY uk_produit_source (id_produit_source),
+    INDEX idx_categorie (categorie)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- DIMENSION : DimDate
+-- ========================================
+CREATE TABLE DimDate (
+    id_date_dim INT PRIMARY KEY,
+    date_complete DATE NOT NULL UNIQUE,
+    annee INT NOT NULL,
+    trimestre INT NOT NULL,
+    mois INT NOT NULL,
+    nom_mois VARCHAR(20) NOT NULL,
+    jour INT NOT NULL,
+    jour_semaine INT NOT NULL,
+    nom_jour VARCHAR(20) NOT NULL,
+    INDEX idx_annee (annee),
+    INDEX idx_mois (mois),
+    INDEX idx_trimestre (trimestre)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- TABLE DE FAITS : FactVentes
+-- ========================================
+CREATE TABLE FactVentes (
+    id_vente INT AUTO_INCREMENT PRIMARY KEY,
+    id_client_dim INT NOT NULL,
+    id_produit_dim INT NOT NULL,
+    id_date_dim INT NOT NULL,
+    quantite INT NOT NULL,
+    prix_unitaire DECIMAL(10,2) NOT NULL,
+    montant_total DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_client_dim) REFERENCES DimClient(id_client_dim),
+    FOREIGN KEY (id_produit_dim) REFERENCES DimProduit(id_produit_dim),
+    FOREIGN KEY (id_date_dim) REFERENCES DimDate(id_date_dim),
+    INDEX idx_client (id_client_dim),
+    INDEX idx_produit (id_produit_dim),
+    INDEX idx_date (id_date_dim)
+) ENGINE=InnoDB;
+
+-- ========================================
+-- VÉRIFICATION DE LA STRUCTURE
+-- ========================================
+SHOW TABLES;
+DESCRIBE DimClient;
+DESCRIBE DimProduit;
+DESCRIBE DimDate;
+DESCRIBE FactVentes;</code></pre>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> La base ventes_dwh est créée avec 4 tables vides, prêtes à recevoir les données transformées via Pentaho.
+        </div>
+
+        <h2>Pentaho PDI - Configuration et Transformations</h2>
+
+        <p>Nous entrons maintenant dans la partie centrale du TP : l'utilisation de Pentaho Data Integration pour extraire, transformer et charger les données depuis OLTP vers le DWH.</p>
+
+        <div class="warning">
+            <strong>Prérequis :</strong> Téléchargez et installez Pentaho Data Integration (PDI) depuis le site officiel de Hitachi Vantara. Décompressez l'archive et lancez <code>Spoon.bat</code> (Windows) ou <code>spoon.sh</code> (Linux/Mac).
+        </div>
+
+        <h3>🔹 Étape 1 : Configuration des connexions à la base de données</h3>
+
+        <p>Avant de créer des transformations, nous devons configurer les connexions vers nos deux bases de données MySQL.</p>
+
+        <div class="step">
+            <p class="step-number">1.1 - Ouvrir Pentaho Spoon</p>
+            <p>Lancez l'application Pentaho Data Integration (Spoon)</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">1.2 - Créer la connexion OLTP</p>
+            <ol>
+                <li>Dans le panneau de gauche, cliquez sur <strong>View</strong></li>
+                <li>Clic droit sur <strong>Database connections</strong> → <strong>New</strong></li>
+                <li>Remplissez les champs suivants :
+                    <ul>
+                        <li><strong>Connection Name :</strong> OLTP_MySQL</li>
+                        <li><strong>Connection Type :</strong> MySQL</li>
+                        <li><strong>Access :</strong> Native (JDBC)</li>
+                        <li><strong>Host Name :</strong> localhost</li>
+                        <li><strong>Database Name :</strong> ventes_oltp</li>
+                        <li><strong>Port Number :</strong> 3306</li>
+                        <li><strong>User Name :</strong> root (ou votre utilisateur MySQL)</li>
+                        <li><strong>Password :</strong> votre mot de passe MySQL</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>Test</strong> pour vérifier la connexion</li>
+                <li>Si le test réussit, cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">1.3 - Créer la connexion DWH</p>
+            <p>Répétez exactement les mêmes étapes, mais avec :</p>
+            <ul>
+                <li><strong>Connection Name :</strong> DWH_MySQL</li>
+                <li><strong>Database Name :</strong> ventes_dwh</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> Vous voyez maintenant deux connexions dans le panneau "Database connections" : OLTP_MySQL et DWH_MySQL
+        </div>
+
+        <h3>🔹 Étape 2 : Transformation 1 - Charger DimClient</h3>
+
+        <p>Nous allons créer notre première transformation pour extraire les clients de l'OLTP et les charger dans DimClient.</p>
+
+        <div class="step">
+            <p class="step-number">2.1 - Créer une nouvelle transformation</p>
+            <ol>
+                <li>Cliquez sur <strong>File</strong> → <strong>New</strong> → <strong>Transformation</strong></li>
+                <li>Sauvegardez immédiatement : <strong>File</strong> → <strong>Save As</strong> → Nommez-la <code>dim_client.ktr</code></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">2.2 - Ajouter un step "Table Input" (Extraction)</p>
+            <ol>
+                <li>Dans le panneau de gauche, sous <strong>Design</strong>, dépliez <strong>Input</strong></li>
+                <li>Double-cliquez sur <strong>Table input</strong> pour l'ajouter au canvas</li>
+                <li>Double-cliquez sur l'icône "Table input" dans le canvas</li>
+                <li>Remplissez :
+                    <ul>
+                        <li><strong>Step name :</strong> Lecture_Clients_OLTP</li>
+                        <li><strong>Connection :</strong> OLTP_MySQL</li>
+                        <li><strong>SQL :</strong></li>
+                    </ul>
+                    <pre><code>SELECT 
+    id_client,
+    CONCAT(prenom, ' ', nom) AS nom_complet,
+    email,
+    ville
+FROM clients</code></pre>
+                </li>
+                <li>Cliquez sur <strong>Preview</strong> pour vérifier que les données sont bien récupérées (vous devriez voir 10 000 lignes)</li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">2.3 - Ajouter un step "Select values" (Transformation)</p>
+            <ol>
+                <li>Dans le panneau de gauche, sous <strong>Transform</strong>, trouvez <strong>Select values</strong></li>
+                <li>Glissez-déposez <strong>Select values</strong> sur le canvas</li>
+                <li>Créez un lien (hop) : maintenez Shift, cliquez sur "Lecture_Clients_OLTP", puis cliquez sur "Select values"</li>
+                <li>Double-cliquez sur "Select values"</li>
+                <li>Remplissez :
+                    <ul>
+                        <li><strong>Step name :</strong> Renommer_Colonnes</li>
+                        <li>Dans l'onglet <strong>Select & Alter</strong>, cliquez sur <strong>Get fields to select</strong></li>
+                        <li>Renommez les champs :
+                            <ul>
+                                <li>id_client → id_client_source</li>
+                                <li>nom_complet → nom_complet (garder tel quel)</li>
+                                <li>email → email (garder tel quel)</li>
+                                <li>ville → ville (garder tel quel)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">2.4 - Ajouter un step "Table Output" (Chargement)</p>
+            <ol>
+                <li>Dans le panneau de gauche, sous <strong>Output</strong>, trouvez <strong>Table output</strong></li>
+                <li>Glissez-déposez <strong>Table output</strong> sur le canvas</li>
+                <li>Créez un lien depuis "Renommer_Colonnes" vers "Table output"</li>
+                <li>Double-cliquez sur "Table output"</li>
+                <li>Remplissez :
+                    <ul>
+                        <li><strong>Step name :</strong> Ecriture_DimClient</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Target schema :</strong> (laisser vide)</li>
+                        <li><strong>Target table :</strong> DimClient</li>
+                        <li>Cochez <strong>Truncate table</strong> (pour vider la table avant insertion)</li>
+                        <li>Décochez <strong>Specify database fields</strong> (Pentaho fera la correspondance automatiquement)</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Votre transformation doit ressembler à ceci :</strong><br>
+            [Lecture_Clients_OLTP] → [Renommer_Colonnes] → [Ecriture_DimClient]
+        </div>
+
+        <div class="step">
+            <p class="step-number">2.5 - Exécuter la transformation</p>
+            <ol>
+                <li>Cliquez sur le bouton <strong>Run</strong> (icône "Play" verte) dans la barre d'outils</li>
+                <li>Dans la fenêtre qui s'ouvre, cliquez sur <strong>Launch</strong></li>
+                <li>Observez l'exécution dans le panneau du bas</li>
+                <li>Vous devriez voir : "Lecture_Clients_OLTP : 10000 rows", "Ecriture_DimClient : 10000 rows"</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> La table DimClient contient maintenant 10 000 lignes. Vérifiez dans MySQL Workbench avec : <code>SELECT COUNT(*) FROM ventes_dwh.DimClient;</code>
+        </div>
+
+        <h3>🔹 Étape 3 : Transformation 2 - Charger DimProduit</h3>
+
+        <p>Nous allons créer une transformation similaire pour les produits.</p>
+
+        <div class="step">
+            <p class="step-number">3.1 - Créer une nouvelle transformation</p>
+            <ol>
+                <li>Cliquez sur <strong>File</strong> → <strong>New</strong> → <strong>Transformation</strong></li>
+                <li>Sauvegardez : <code>dim_produit.ktr</code></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">3.2 - Ajouter un step "Table Input"</p>
+            <ol>
+                <li>Ajoutez un <strong>Table input</strong></li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Lecture_Produits_OLTP</li>
+                        <li><strong>Connection :</strong> OLTP_MySQL</li>
+                        <li><strong>SQL :</strong></li>
+                    </ul>
+                    <pre><code>SELECT 
+    id_produit,
+    nom_produit,
+    categorie
+FROM produits</code></pre>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">3.3 - Ajouter un step "Select values"</p>
+            <ol>
+                <li>Ajoutez <strong>Select values</strong> et créez le lien</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Renommer_Colonnes</li>
+                        <li>Renommez : id_produit → id_produit_source</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">3.4 - Ajouter un step "Table Output"</p>
+            <ol>
+                <li>Ajoutez <strong>Table output</strong> et créez le lien</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Ecriture_DimProduit</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Target table :</strong> DimProduit</li>
+                        <li>Cochez <strong>Truncate table</strong></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">3.5 - Exécuter la transformation</p>
+            <p>Cliquez sur <strong>Run</strong> et vérifiez que 500 produits sont chargés dans DimProduit</p>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> La table DimProduit contient 500 lignes
+        </div>
+
+        <h3>🔹 Étape 4 : Transformation 3 - Générer DimDate</h3>
+
+        <p>La dimension date est particulière : elle n'existe pas dans l'OLTP. Nous allons la générer artificiellement pour couvrir la période 2022-2024.</p>
+
+        <div class="step">
+            <p class="step-number">4.1 - Créer une nouvelle transformation</p>
+            <ol>
+                <li>Créez une nouvelle transformation et sauvegardez-la : <code>dim_date.ktr</code></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.2 - Ajouter un step "Generate Rows"</p>
+            <ol>
+                <li>Dans le panneau de gauche, sous <strong>Input</strong>, trouvez <strong>Generate Rows</strong></li>
+                <li>Glissez-déposez sur le canvas</li>
+                <li>Double-cliquez dessus</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Generer_Lignes</li>
+                        <li><strong>Limit :</strong> 1096 (nombre de jours entre 2022-01-01 et 2024-12-31)</li>
+                        <li>Dans la section <strong>Fields</strong>, ajoutez un champ :
+                            <ul>
+                                <li><strong>Name :</strong> compteur</li>
+                                <li><strong>Type :</strong> Integer</li>
+                                <li><strong>Value :</strong> 0</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.3 - Ajouter un step "Add sequence"</p>
+            <ol>
+                <li>Dans le panneau de gauche, sous <strong>Transform</strong>, trouvez <strong>Add sequence</strong></li>
+                <li>Glissez-déposez et créez le lien depuis "Generer_Lignes"</li>
+                <li>Double-cliquez dessus</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Ajouter_Sequence</li>
+                        <li><strong>Value name :</strong> numero_jour</li>
+                        <li><strong>Start value :</strong> 0</li>
+                        <li><strong>Increment :</strong> 1</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.4 - Ajouter un step "Calculator"</p>
+            <ol>
+                <li>Trouvez <strong>Calculator</strong> sous <strong>Transform</strong></li>
+                <li>Glissez-déposez et créez le lien</li>
+                <li>Double-cliquez dessus</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Calculer_Date</li>
+                        <li>Ajoutez un calcul :
+                            <ul>
+                                <li><strong>New field :</strong> date_complete</li>
+                                <li><strong>Calculation :</strong> Add days to a date A</li>
+                                <li><strong>Field A :</strong> Entrez manuellement "2022-01-01" (date de départ)</li>
+                                <li><strong>Field B :</strong> numero_jour</li>
+                                <li><strong>Value type :</strong> Date</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Note :</strong> Si le Calculator ne propose pas l'option "Add days to a date", utilisez plutôt un <strong>Modified Java Script Value</strong> (voir ci-dessous).
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.5 - Alternative : Utiliser "Modified Java Script Value"</p>
+            <p>Si le Calculator ne fonctionne pas, utilisez cette méthode :</p>
+            <ol>
+                <li>Trouvez <strong>Modified Java Script Value</strong> sous <strong>Scripting</strong></li>
+                <li>Remplacez le Calculator par ce step</li>
+                <li>Double-cliquez dessus</li>
+                <li>Dans le champ de script, collez :</li>
+            </ol>
+            <pre><code>// Créer la date de base (1er janvier 2022)
+var date_base = new Date(2022, 0, 1);
+
+// Ajouter le nombre de jours
+date_base.setDate(date_base.getDate() + numero_jour);
+
+// Créer la date complète
+var date_complete = date_base;
+
+// Extraire les composantes
+var annee = date_base.getFullYear();
+var mois = date_base.getMonth() + 1;
+var jour = date_base.getDate();
+var trimestre = Math.ceil(mois / 3);
+var jour_semaine = date_base.getDay() == 0 ? 7 : date_base.getDay();
+
+// Calculer id_date_dim (format YYYYMMDD)
+var id_date_dim = annee * 10000 + mois * 100 + jour;
+
+// Noms des mois
+var noms_mois = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+var nom_mois = noms_mois[mois - 1];
+
+// Noms des jours
+var noms_jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+var nom_jour = noms_jours[jour_semaine - 1];</code></pre>
+                <li>Cliquez sur <strong>Get variables</strong> pour déclarer automatiquement les variables de sortie</li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.6 - Ajouter un step "Select values"</p>
+            <ol>
+                <li>Ajoutez <strong>Select values</strong></li>
+                <li>Sélectionnez uniquement les champs nécessaires dans cet ordre :
+                    <ul>
+                        <li>id_date_dim</li>
+                        <li>date_complete</li>
+                        <li>annee</li>
+                        <li>trimestre</li>
+                        <li>mois</li>
+                        <li>nom_mois</li>
+                        <li>jour</li>
+                        <li>jour_semaine</li>
+                        <li>nom_jour</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.7 - Ajouter un step "Table Output"</p>
+            <ol>
+                <li>Ajoutez <strong>Table output</strong></li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Ecriture_DimDate</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Target table :</strong> DimDate</li>
+                        <li>Cochez <strong>Truncate table</strong></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.8 - Exécuter la transformation</p>
+            <p>Cliquez sur <strong>Run</strong> et vérifiez que 1096 dates sont générées</p>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> La table DimDate contient 1096 lignes couvrant la période 2022-2024. Vérifiez avec : <code>SELECT * FROM ventes_dwh.DimDate ORDER BY date_complete LIMIT 10;</code>
+        </div>
+
+        <h3>🔹 Étape 5 : Transformation 4 - Charger FactVentes (la plus complexe)</h3>
+
+        <p>Cette transformation est la plus importante car elle crée la table de faits en effectuant des jointures entre les données OLTP et les dimensions du DWH.</p>
+
+        <div class="step">
+            <p class="step-number">5.1 - Créer une nouvelle transformation</p>
+            <ol>
+                <li>Créez une nouvelle transformation : <code>fact_ventes.ktr</code></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.2 - Extraire les lignes de commandes (source principale)</p>
+            <ol>
+                <li>Ajoutez un <strong>Table input</strong></li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Lecture_Lignes_Commandes</li>
+                        <li><strong>Connection :</strong> OLTP_MySQL</li>
+                        <li><strong>SQL :</strong></li>
+                    </ul>
+                    <pre><code>SELECT 
+    lc.id_ligne,
+    lc.id_commande,
+    lc.id_produit,
+    lc.quantite,
+    lc.prix_unitaire,
+    c.id_client,
+    c.date_commande
+FROM lignes_commandes lc
+INNER JOIN commandes c ON lc.id_commande = c.id_commande</code></pre>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.3 - Lookup DimClient (récupérer id_client_dim)</p>
+            <ol>
+                <li>Sous <strong>Lookup</strong>, trouvez <strong>Database lookup</strong></li>
+                <li>Glissez-déposez et créez le lien depuis "Lecture_Lignes_Commandes"</li>
+                <li>Double-cliquez dessus</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Lookup_Client</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Lookup schema :</strong> (vide)</li>
+                        <li><strong>Lookup table :</strong> DimClient</li>
+                        <li><strong>Table keys :</strong>
+                            <ul>
+                                <li><strong>Field :</strong> id_client</li>
+                                <li><strong>Comparator :</strong> =</li>
+                                <li><strong>Table field :</strong> id_client_source</li>
+                            </ul>
+                        </li>
+                        <li><strong>Return values :</strong>
+                            <ul>
+                                <li><strong>Field in table :</strong> id_client_dim</li>
+                                <li><strong>New name :</strong> id_client_dim</li>
+                                <li><strong>Default :</strong> (vide)</li>
+                                <li><strong>Type :</strong> Integer</li>
+                            </ul>
+                        </li>
+                        <li>Cochez <strong>Enable cache</strong> pour améliorer les performances</li>
+                        <li><strong>Cache size :</strong> 10000</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.4 - Lookup DimProduit (récupérer id_produit_dim)</p>
+            <ol>
+                <li>Ajoutez un autre <strong>Database lookup</strong></li>
+                <li>Créez le lien depuis "Lookup_Client"</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Lookup_Produit</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Lookup table :</strong> DimProduit</li>
+                        <li><strong>Table keys :</strong>
+                            <ul>
+                                <li><strong>Field :</strong> id_produit</li>
+                                <li><strong>Table field :</strong> id_produit_source</li>
+                            </ul>
+                        </li>
+                        <li><strong>Return values :</strong>
+                            <ul>
+                                <li><strong>Field in table :</strong> id_produit_dim</li>
+                                <li><strong>New name :</strong> id_produit_dim</li>
+                            </ul>
+                        </li>
+                        <li>Cochez <strong>Enable cache</strong>, taille : 500</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.5 - Lookup DimDate (récupérer id_date_dim)</p>
+            <ol>
+                <li>Ajoutez un troisième <strong>Database lookup</strong></li>
+                <li>Créez le lien depuis "Lookup_Produit"</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Lookup_Date</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Lookup table :</strong> DimDate</li>
+                        <li><strong>Table keys :</strong>
+                            <ul>
+                                <li><strong>Field :</strong> date_commande</li>
+                                <li><strong>Table field :</strong> date_complete</li>
+                            </ul>
+                        </li>
+                        <li><strong>Return values :</strong>
+                            <ul>
+                                <li><strong>Field in table :</strong> id_date_dim</li>
+                                <li><strong>New name :</strong> id_date_dim</li>
+                            </ul>
+                        </li>
+                        <li>Cochez <strong>Enable cache</strong>, taille : 1100</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.6 - Calculer le montant total</p>
+            <ol>
+                <li>Ajoutez un <strong>Calculator</strong></li>
+                <li>Créez le lien depuis "Lookup_Date"</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Calculer_Montant</li>
+                        <li>Ajoutez un calcul :
+                            <ul>
+                                <li><strong>New field :</strong> montant_total</li>
+                                <li><strong>Calculation :</strong> Multiply A by B (A * B)</li>
+                                <li><strong>Field A :</strong> quantite</li>
+                                <li><strong>Field B :</strong> prix_unitaire</li>
+                                <li><strong>Value type :</strong> Number</li>
+                                <li><strong>Decimal symbol :</strong> .</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.7 - Sélectionner les champs finaux</p>
+            <ol>
+                <li>Ajoutez un <strong>Select values</strong></li>
+                <li>Créez le lien depuis "Calculer_Montant"</li>
+                <li>Sélectionnez uniquement ces champs dans cet ordre :
+                    <ul>
+                        <li>id_client_dim</li>
+                        <li>id_produit_dim</li>
+                        <li>id_date_dim</li>
+                        <li>quantite</li>
+                        <li>prix_unitaire</li>
+                        <li>montant_total</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.8 - Écrire dans FactVentes</p>
+            <ol>
+                <li>Ajoutez un <strong>Table output</strong></li>
+                <li>Créez le lien</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Step name :</strong> Ecriture_FactVentes</li>
+                        <li><strong>Connection :</strong> DWH_MySQL</li>
+                        <li><strong>Target table :</strong> FactVentes</li>
+                        <li>Cochez <strong>Truncate table</strong></li>
+                        <li><strong>Commit size :</strong> 1000 (pour de meilleures performances)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Votre transformation doit ressembler à ceci :</strong><br>
+            [Lecture_Lignes_Commandes] → [Lookup_Client] → [Lookup_Produit] → [Lookup_Date] → [Calculer_Montant] → [Select values] → [Ecriture_FactVentes]
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.9 - Exécuter la transformation</p>
+            <ol>
+                <li>Cliquez sur <strong>Run</strong></li>
+                <li>Cette transformation peut prendre 1-2 minutes car elle traite 100 000 lignes avec 3 lookups</li>
+                <li>Observez la progression dans le panneau du bas</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> La table FactVentes contient 100 000 lignes. Vérifiez avec : <code>SELECT COUNT(*) FROM ventes_dwh.FactVentes;</code>
+        </div>
+
+        <div class="warning">
+            <strong>Dépannage :</strong>
+            <ul>
+                <li>Si vous obtenez des erreurs de "null values", vérifiez que toutes les dimensions sont bien remplies avant d'exécuter cette transformation</li>
+                <li>Si les lookups sont lents, assurez-vous que les index sont bien créés dans le DWH</li>
+                <li>Si vous avez des erreurs de mémoire, augmentez la mémoire de Pentaho dans le fichier <code>Spoon.bat</code> ou <code>spoon.sh</code></li>
+            </ul>
+        </div>
+
+        <h2>Création du Job d'Orchestration Pentaho</h2>
+
+        <p>Maintenant que nous avons créé les 4 transformations, nous allons les orchestrer dans un <strong>Job</strong> qui les exécutera dans le bon ordre.</p>
+
+        <h3>🔹 Pourquoi un Job ?</h3>
+        <p>Un Job permet de :</p>
+        <ul>
+            <li>Exécuter plusieurs transformations dans un ordre précis</li>
+            <li>Gérer les dépendances entre transformations</li>
+            <li>Gérer les erreurs et les chemins d'exécution conditionnels</li>
+            <li>Planifier l'exécution automatique (via cron ou Task Scheduler)</li>
+        </ul>
+
+        <div class="step">
+            <p class="step-number">Étape 1 : Créer un nouveau Job</p>
+            <ol>
+                <li>Dans Pentaho Spoon, cliquez sur <strong>File</strong> → <strong>New</strong> → <strong>Job</strong></li>
+                <li>Sauvegardez immédiatement : <code>job_etl_complet.kjb</code></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 2 : Ajouter l'entrée START</p>
+            <ol>
+                <li>Dans le panneau de gauche, sous <strong>General</strong>, trouvez <strong>START</strong></li>
+                <li>Glissez-déposez sur le canvas (toujours présent dans un Job)</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 3 : Ajouter la transformation DimClient</p>
+            <ol>
+                <li>Sous <strong>General</strong>, trouvez <strong>Transformation</strong></li>
+                <li>Glissez-déposez sur le canvas</li>
+                <li>Double-cliquez dessus</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Job entry name :</strong> Charger_DimClient</li>
+                        <li>Cliquez sur <strong>Browse</strong> et sélectionnez <code>dim_client.ktr</code></li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+                <li>Créez un lien depuis START vers "Charger_DimClient" (maintenez Shift, cliquez sur START, puis sur la transformation)</li>
+                <li>Quand on vous demande le type de lien, choisissez <strong>Unconditional</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 4 : Ajouter la transformation DimProduit</p>
+            <ol>
+                <li>Ajoutez une autre <strong>Transformation</strong></li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Job entry name :</strong> Charger_DimProduit</li>
+                        <li>Sélectionnez <code>dim_produit.ktr</code></li>
+                    </ul>
+                </li>
+                <li>Créez un lien depuis "Charger_DimClient" vers "Charger_DimProduit"</li>
+                <li>Choisissez <strong>Follow when result is true</strong> (exécuter si la précédente réussit)</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 5 : Ajouter la transformation DimDate</p>
+            <ol>
+                <li>Ajoutez une <strong>Transformation</strong></li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Job entry name :</strong> Charger_DimDate</li>
+                        <li>Sélectionnez <code>dim_date.ktr</code></li>
+                    </ul>
+                </li>
+                <li>Créez un lien depuis "Charger_DimProduit" vers "Charger_DimDate" (type : "true")</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 6 : Ajouter la transformation FactVentes</p>
+            <ol>
+                <li>Ajoutez une <strong>Transformation</strong></li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Job entry name :</strong> Charger_FactVentes</li>
+                        <li>Sélectionnez <code>fact_ventes.ktr</code></li>
+                    </ul>
+                </li>
+                <li>Créez un lien depuis "Charger_DimDate" vers "Charger_FactVentes" (type : "true")</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 7 : Ajouter un message de succès (optionnel)</p>
+            <ol>
+                <li>Sous <strong>Utility</strong>, trouvez <strong>Write to log</strong></li>
+                <li>Glissez-déposez sur le canvas</li>
+                <li>Configuration :
+                    <ul>
+                        <li><strong>Job entry name :</strong> Message_Succes</li>
+                        <li><strong>Log level :</strong> Basic</li>
+                        <li><strong>Log subject :</strong> ETL Complet</li>
+                        <li><strong>Log message :</strong> Toutes les transformations ont été exécutées avec succès ! Le Data Warehouse est à jour.</li>
+                    </ul>
+                </li>
+                <li>Créez un lien depuis "Charger_FactVentes" vers "Message_Succes"</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Structure du Job :</strong><br>
+            START → Charger_DimClient → Charger_DimProduit → Charger_DimDate → Charger_FactVentes → Message_Succes
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape 8 : Exécuter le Job complet</p>
+            <ol>
+                <li>Cliquez sur le bouton <strong>Run</strong> (icône "Play" verte)</li>
+                <li>Cliquez sur <strong>Launch</strong></li>
+                <li>Observez l'exécution séquentielle de toutes les transformations</li>
+                <li>Le Job prend environ 2-3 minutes pour s'exécuter complètement</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> Toutes les étapes sont vertes, et vous voyez le message de succès dans les logs. Votre Data Warehouse est maintenant complètement rempli !
+        </div>
+
+        <h3>🔹 Planification automatique (Bonus)</h3>
+
+        <p>Pour exécuter ce Job automatiquement tous les jours à minuit, vous pouvez utiliser :</p>
+
+        <h4>Sous Windows (Task Scheduler)</h4>
+        <pre><code>"C:\Pentaho\data-integration\Kitchen.bat" /file:"C:\chemin\vers\job_etl_complet.kjb" /level:Basic</code></pre>
+
+        <h4>Sous Linux/Mac (cron)</h4>
+        <pre><code># Ouvrir crontab
+crontab -e
+
+# Ajouter cette ligne pour exécuter à minuit tous les jours
+0 0 * * * /opt/pentaho/data-integration/kitchen.sh -file=/chemin/vers/job_etl_complet.kjb -level=Basic</code></pre>
+
+        <h2>Requêtes OLAP sur le Data Warehouse</h2>
+
+        <p>Maintenant que notre Data Warehouse est rempli, nous allons l'interroger pour répondre aux questions métier.</p>
+
+        <div class="note">
+            <strong>Important :</strong> Toutes les requêtes OLAP doivent s'exécuter dans <strong>MySQL Workbench</strong> → sélectionner la base <strong>« ventes_dwh »</strong> → exécuter les requêtes SQL ci-dessous.
+        </div>
+
+        <div class="step">
+            <p class="step-number">Étape préalable</p>
+            <p>Ouvrez MySQL Workbench, connectez-vous à votre serveur, et sélectionnez la base de données :</p>
+            <pre><code>USE ventes_dwh;</code></pre>
+        </div>
+
+        <h3>🔹 Requête 1 : Chiffre d'affaires par ville</h3>
+
+        <p>Cette requête permet d'identifier les villes générant le plus de revenus.</p>
+
+        <pre><code>SELECT 
+    c.ville,
+    SUM(f.montant_total) AS chiffre_affaires,
+    COUNT(DISTINCT f.id_client_dim) AS nombre_clients,
+    COUNT(f.id_vente) AS nombre_ventes
+FROM FactVentes f
+INNER JOIN DimClient c ON f.id_client_dim = c.id_client_dim
+GROUP BY c.ville
+ORDER BY chiffre_affaires DESC;</code></pre>
+
+        <p><strong>Interprétation :</strong> Cette requête agrège les ventes par ville. Elle permet de concentrer les efforts marketing sur les villes les plus rentables. Par exemple, si Paris génère 35% du CA, l'entreprise pourrait y ouvrir un showroom physique.</p>
+
+        <h3>🔹 Requête 2 : Chiffre d'affaires par catégorie de produit</h3>
+
+        <p>Permet d'identifier les catégories de produits les plus performantes.</p>
+
+        <pre><code>SELECT 
+    p.categorie,
+    SUM(f.montant_total) AS chiffre_affaires,
+    SUM(f.quantite) AS quantite_vendue,
+    COUNT(DISTINCT f.id_produit_dim) AS nombre_produits_distincts,
+    ROUND(AVG(f.prix_unitaire), 2) AS prix_moyen
+FROM FactVentes f
+INNER JOIN DimProduit p ON f.id_produit_dim = p.id_produit_dim
+GROUP BY p.categorie
+ORDER BY chiffre_affaires DESC;</code></pre>
+
+        <p><strong>Interprétation :</strong> Si la catégorie "Ordinateurs" représente 45% du CA, cela justifie d'élargir cette gamme de produits. À l'inverse, une catégorie peu vendue pourrait être abandonnée ou promue différemment.</p>
+
+        <h3>🔹 Requête 3 : Évolution des ventes par mois</h3>
+
+        <p>Analyse de la tendance temporelle des ventes.</p>
+
+        <pre><code>SELECT 
+    d.annee,
+    d.mois,
+    d.nom_mois,
+    SUM(f.montant_total) AS chiffre_affaires,
+    COUNT(f.id_vente) AS nombre_ventes,
+    ROUND(AVG(f.montant_total), 2) AS panier_moyen
+FROM FactVentes f
+INNER JOIN DimDate d ON f.id_date_dim = d.id_date_dim
+GROUP BY d.annee, d.mois, d.nom_mois
+ORDER BY d.annee, d.mois;</code></pre>
+
+        <p><strong>Interprétation :</strong> Cette requête révèle la saisonnalité des ventes. Par exemple, un pic en décembre indique l'effet des fêtes de fin d'année, suggérant d'augmenter le stock et les campagnes publicitaires en novembre-décembre.</p>
+
+        <h3>🔹 Requête 4 : Top 10 des produits les plus vendus</h3>
+
+        <p>Identifie les produits stars du catalogue.</p>
+
+        <pre><code>SELECT 
+    p.nom_produit,
+    p.categorie,
+    SUM(f.quantite) AS quantite_totale_vendue,
+    SUM(f.montant_total) AS chiffre_affaires,
+    ROUND(AVG(f.prix_unitaire), 2) AS prix_moyen
+FROM FactVentes f
+INNER JOIN DimProduit p ON f.id_produit_dim = p.id_produit_dim
+GROUP BY p.id_produit_dim, p.nom_produit, p.categorie
+ORDER BY quantite_totale_vendue DESC
+LIMIT 10;</code></pre>
+
+        <p><strong>Interprétation :</strong> Les 10 produits les plus vendus représentent souvent une part disproportionnée du CA (principe de Pareto 80/20). Ces produits doivent toujours être en stock et mis en avant sur le site web.</p>
+
+        <h3>🔹 Requête 5 : Analyse par trimestre et catégorie (analyse croisée)</h3>
+
+        <p>Analyse multidimensionnelle combinant temps et catégorie.</p>
+
+        <pre><code>SELECT 
+    d.annee,
+    d.trimestre,
+    p.categorie,
+    SUM(f.montant_total) AS chiffre_affaires,
+    SUM(f.quantite) AS quantite_vendue
+FROM FactVentes f
+INNER JOIN DimDate d ON f.id_date_dim = d.id_date_dim
+INNER JOIN DimProduit p ON f.id_produit_dim = p.id_produit_dim
+GROUP BY d.annee, d.trimestre, p.categorie
+ORDER BY d.annee, d.trimestre, chiffre_affaires DESC;</code></pre>
+
+        <p><strong>Interprétation :</strong> Cette requête révèle quelles catégories performent à quels moments de l'année. Par exemple, les "Tablettes" peuvent mieux se vendre au Q3 (rentrée scolaire) tandis que les "Montres" performent au Q4 (cadeaux de Noël).</p>
+
+        <div class="success">
+            <strong>Avantages du schéma en étoile :</strong>
+            <ul>
+                <li>Toutes ces requêtes sont <strong>très rapides</strong> malgré les 100 000 lignes</li>
+                <li>La syntaxe SQL est <strong>simple et lisible</strong></li>
+                <li>Chaque requête nécessite seulement <strong>1 ou 2 jointures</strong></li>
+                <li>Les dimensions enrichissent naturellement l'analyse (noms de mois, catégories, villes)</li>
+            </ul>
+        </div>
+
+        <h2>Power BI - Reporting et Visualisation</h2>
+
+        <p>Nous allons maintenant créer un tableau de bord interactif dans Power BI pour visualiser nos données du Data Warehouse.</p>
+
+        <div class="warning">
+            <strong>Prérequis :</strong> Téléchargez et installez <strong>Power BI Desktop</strong> (gratuit) depuis le site de Microsoft. Assurez-vous également d'avoir le connecteur MySQL pour Power BI.
+        </div>
+
+        <h3>🔹 Étape 1 : Se connecter à MySQL depuis Power BI</h3>
+
+        <div class="step">
+            <p class="step-number">1.1 - Lancer Power BI Desktop</p>
+            <p>Ouvrez Power BI Desktop. À l'écran d'accueil, vous verrez diverses options.</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">1.2 - Obtenir les données</p>
+            <ol>
+                <li>Cliquez sur <strong>Obtenir des données</strong> (Get Data) dans le ruban Accueil</li>
+                <li>Dans la liste, recherchez <strong>MySQL database</strong></li>
+                <li>Sélectionnez-le et cliquez sur <strong>Connexion</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">1.3 - Configurer la connexion</p>
+            <ol>
+                <li>Dans la fenêtre de connexion, remplissez :
+                    <ul>
+                        <li><strong>Serveur :</strong> localhost</li>
+                        <li><strong>Base de données :</strong> ventes_dwh</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>OK</strong></li>
+                <li>Sélectionnez l'onglet <strong>Base de données</strong></li>
+                <li>Entrez vos identifiants MySQL :
+                    <ul>
+                        <li><strong>Nom d'utilisateur :</strong> root (ou votre user)</li>
+                        <li><strong>Mot de passe :</strong> votre mot de passe MySQL</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>Connexion</strong></li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Note :</strong> Si Power BI vous demande d'installer le connecteur MySQL, suivez les instructions pour télécharger et installer le pilote MySQL Connector/NET depuis le site d'Oracle.
+        </div>
+
+        <h3>🔹 Étape 2 : Importer les tables du Data Warehouse</h3>
+
+        <div class="step">
+            <p class="step-number">2.1 - Sélectionner les tables</p>
+            <ol>
+                <li>Dans la fenêtre Navigateur qui s'affiche, vous voyez la liste des tables de ventes_dwh</li>
+                <li>Cochez les 4 tables :
+                    <ul>
+                        <li>☑ DimClient</li>
+                        <li>☑ DimProduit</li>
+                        <li>☑ DimDate</li>
+                        <li>☑ FactVentes</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>Charger</strong> (Load)</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">2.2 - Attendre le chargement</p>
+            <p>Power BI importe les données. Cela peut prendre 30 secondes à 1 minute pour les 100 000 lignes de FactVentes.</p>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> Dans le panneau de droite "Champs" (Fields), vous voyez maintenant les 4 tables avec leurs colonnes respectives.
+        </div>
+
+        <h3>🔹 Étape 3 : Vérifier et configurer le modèle de données</h3>
+
+        <div class="step">
+            <p class="step-number">3.1 - Ouvrir la vue Modèle</p>
+            <ol>
+                <li>Sur le côté gauche, cliquez sur l'icône <strong>Modèle</strong> (trois tables reliées)</li>
+                <li>Vous voyez un diagramme avec les 4 tables</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">3.2 - Vérifier les relations automatiques</p>
+            <p>Power BI devrait avoir détecté automatiquement les relations grâce aux clés étrangères :</p>
+            <ul>
+                <li>FactVentes.id_client_dim ↔ DimClient.id_client_dim</li>
+                <li>FactVentes.id_produit_dim ↔ DimProduit.id_produit_dim</li>
+                <li>FactVentes.id_date_dim ↔ DimDate.id_date_dim</li>
+            </ul>
+            <p>Ces relations sont représentées par des lignes entre les tables.</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">3.3 - Créer manuellement une relation (si nécessaire)</p>
+            <p>Si une relation manque :</p>
+            <ol>
+                <li>Cliquez sur <strong>Gérer les relations</strong> dans le ruban</li>
+                <li>Cliquez sur <strong>Nouvelle</strong></li>
+                <li>Sélectionnez la table et la colonne source, puis la table et la colonne cible</li>
+                <li>Assurez-vous que la <strong>Cardinalité</strong> est "Plusieurs à un (*:1)"</li>
+                <li>Cliquez sur <strong>OK</strong></li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Structure attendue :</strong><br>
+            Votre modèle doit ressembler à un schéma en étoile : FactVentes au centre, avec les trois dimensions (DimClient, DimProduit, DimDate) autour, reliées par des lignes.
+        </div>
+
+        <h3>🔹 Étape 4 : Créer les visualisations</h3>
+
+        <p>Revenons à la vue Rapport (icône graphique à gauche) pour créer nos visuels.</p>
+
+        <h4>Visuel 1 : Chiffre d'affaires par ville (Graphique à barres)</h4>
+
+        <div class="step">
+            <p class="step-number">4.1 - Ajouter un graphique à barres</p>
+            <ol>
+                <li>Cliquez sur une zone vide du canevas</li>
+                <li>Dans le panneau <strong>Visualisations</strong> (à droite), cliquez sur l'icône <strong>Graphique à barres groupées</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.2 - Configurer les champs</p>
+            <ol>
+                <li>Dans le panneau <strong>Champs</strong>, dépliez <strong>DimClient</strong></li>
+                <li>Glissez <strong>ville</strong> vers <strong>Axe</strong> (ou Axe Y)</li>
+                <li>Dépliez <strong>FactVentes</strong></li>
+                <li>Glissez <strong>montant_total</strong> vers <strong>Valeurs</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.3 - Personnaliser</p>
+            <ol>
+                <li>Dans le panneau Visualisations, cliquez sur l'icône <strong>Format</strong> (rouleau de peinture)</li>
+                <li>Ajoutez un titre : "Chiffre d'affaires par ville"</li>
+                <li>Activez les <strong>Étiquettes de données</strong> pour afficher les montants sur les barres</li>
+                <li>Changez les couleurs si souhaité</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Interprétation :</strong> Ce graphique montre instantanément quelle ville génère le plus de revenus. Paris, Lyon et Marseille apparaîtront probablement en tête. Les décideurs peuvent utiliser cette information pour allouer les budgets marketing géographiquement.
+        </div>
+
+        <h4>Visuel 2 : Chiffre d'affaires par catégorie (Graphique en secteurs)</h4>
+
+        <div class="step">
+            <p class="step-number">4.4 - Ajouter un graphique en secteurs</p>
+            <ol>
+                <li>Cliquez sur une zone vide du canevas</li>
+                <li>Sélectionnez l'icône <strong>Graphique en secteurs</strong> (Pie chart)</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.5 - Configurer les champs</p>
+            <ol>
+                <li>Glissez <strong>DimProduit.categorie</strong> vers <strong>Légende</strong></li>
+                <li>Glissez <strong>FactVentes.montant_total</strong> vers <strong>Valeurs</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.6 - Personnaliser</p>
+            <ol>
+                <li>Ajoutez un titre : "Répartition du CA par catégorie"</li>
+                <li>Activez les <strong>Étiquettes de détails</strong> pour afficher les pourcentages</li>
+                <li>Personnalisez les couleurs pour différencier les catégories</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Interprétation :</strong> Le graphique en secteurs révèle la contribution relative de chaque catégorie au CA total. Si "Ordinateurs" représente 40% du camembert, c'est la catégorie stratégique à ne jamais laisser en rupture de stock.
+        </div>
+
+        <h4>Visuel 3 : Évolution des ventes mensuelles (Graphique en courbes)</h4>
+
+        <div class="step">
+            <p class="step-number">4.7 - Ajouter un graphique en courbes</p>
+            <ol>
+                <li>Cliquez sur une zone vide</li>
+                <li>Sélectionnez <strong>Graphique en courbes</strong> (Line chart)</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.8 - Configurer les champs</p>
+            <ol>
+                <li>Glissez <strong>DimDate.date_complete</strong> vers <strong>Axe X</strong></li>
+                <li>Glissez <strong>FactVentes.montant_total</strong> vers <strong>Valeurs</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.9 - Configurer la hiérarchie temporelle</p>
+            <ol>
+                <li>Cliquez sur la petite flèche à côté de "date_complete" dans l'axe</li>
+                <li>Sélectionnez le niveau de granularité souhaité :
+                    <ul>
+                        <li>Année → pour une vue macro</li>
+                        <li>Année > Trimestre → pour voir les tendances trimestrielles</li>
+                        <li>Année > Mois → pour l'évolution mensuelle (recommandé)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.10 - Personnaliser</p>
+            <ol>
+                <li>Titre : "Évolution mensuelle du chiffre d'affaires"</li>
+                <li>Activez les <strong>Marqueurs</strong> pour voir les points sur la courbe</li>
+                <li>Ajoutez une couleur distinctive (ex : bleu foncé)</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Interprétation :</strong> La courbe révèle la saisonnalité et les tendances. Une croissance constante indique une bonne santé commerciale. Des pics réguliers (ex : décembre) suggèrent des opportunités de campagnes ciblées.
+        </div>
+
+        <h4>Visuel 4 : Top 10 des produits (Graphique à barres horizontales)</h4>
+
+        <div class="step">
+            <p class="step-number">4.11 - Ajouter un graphique à barres</p>
+            <ol>
+                <li>Cliquez sur une zone vide</li>
+                <li>Sélectionnez <strong>Graphique à barres horizontales</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.12 - Configurer les champs</p>
+            <ol>
+                <li>Glissez <strong>DimProduit.nom_produit</strong> vers <strong>Axe Y</strong></li>
+                <li>Glissez <strong>FactVentes.quantite</strong> vers <strong>Valeurs</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.13 - Limiter au Top 10</p>
+            <ol>
+                <li>Cliquez sur le visuel pour le sélectionner</li>
+                <li>Dans le panneau Visualisations, allez dans <strong>Filtres</strong></li>
+                <li>Trouvez le filtre sur <strong>nom_produit</strong></li>
+                <li>Changez le type de filtre en <strong>Top N</strong></li>
+                <li>Configurez :
+                    <ul>
+                        <li><strong>Afficher les éléments :</strong> Top 10</li>
+                        <li><strong>Par valeur :</strong> Somme de quantite</li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>Appliquer le filtre</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">4.14 - Personnaliser</p>
+            <ol>
+                <li>Titre : "Top 10 des produits les plus vendus"</li>
+                <li>Triez les barres par ordre décroissant</li>
+                <li>Activez les étiquettes de données</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Interprétation :</strong> Ce visuel identifie les produits stars. Ces produits doivent être mis en avant sur la page d'accueil du site et bénéficier de promotions pour maximiser les ventes.
+        </div>
+
+        <h3>🔹 Étape 5 : Ajouter des segments (Slicers) pour l'interactivité</h3>
+
+        <p>Les segments permettent de filtrer dynamiquement tous les visuels du rapport.</p>
+
+        <div class="step">
+            <p class="step-number">5.1 - Ajouter un segment Année</p>
+            <ol>
+                <li>Cliquez sur une zone vide</li>
+                <li>Sélectionnez l'icône <strong>Segment</strong> (Slicer) dans les visualisations</li>
+                <li>Glissez <strong>DimDate.annee</strong> vers <strong>Champ</strong></li>
+                <li>Positionnez ce segment en haut à gauche du rapport</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.2 - Ajouter un segment Catégorie</p>
+            <ol>
+                <li>Ajoutez un autre <strong>Segment</strong></li>
+                <li>Glissez <strong>DimProduit.categorie</strong> vers <strong>Champ</strong></li>
+                <li>Positionnez-le à côté du segment Année</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">5.3 - Tester l'interactivité</p>
+            <ol>
+                <li>Cliquez sur "2023" dans le segment Année : tous les visuels se mettent à jour pour afficher uniquement les données 2023</li>
+                <li>Cliquez sur "Ordinateurs" dans le segment Catégorie : les visuels se filtrent encore plus</li>
+                <li>Cliquez sur une barre du graphique "CA par ville" : tous les autres visuels se filtrent pour cette ville</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Note:</strong> Cette interactivité bidirectionnelle (cross-filtering) est l'une des forces majeures de Power BI. Elle permet aux utilisateurs d'explorer les données de manière intuitive sans écrire de SQL.
+        </div>
+
+        <h3>🔹 Étape 6 : Créer des mesures DAX (optionnel mais recommandé)</h3>
+
+        <p>Pour enrichir l'analyse, créons quelques mesures calculées avec le langage DAX.</p>
+
+        <div class="step">
+            <p class="step-number">6.1 - Créer une mesure "CA Total"</p>
+            <ol>
+                <li>Dans le panneau Champs, clic droit sur <strong>FactVentes</strong></li>
+                <li>Sélectionnez <strong>Nouvelle mesure</strong></li><li>Dans la barre de formule qui apparaît, tapez :</li>
+            </ol>
+            <pre><code>CA Total = SUM(FactVentes[montant_total])</code></pre>
+            <ol start="4">
+                <li>Appuyez sur <strong>Entrée</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">6.2 - Créer une mesure "Nombre de ventes"</p>
+            <ol>
+                <li>Clic droit sur <strong>FactVentes</strong> → <strong>Nouvelle mesure</strong></li>
+                <li>Tapez :</li>
+            </ol>
+            <pre><code>Nombre de Ventes = COUNT(FactVentes[id_vente])</code></pre>
+        </div>
+
+        <div class="step">
+            <p class="step-number">6.3 - Créer une mesure "Panier Moyen"</p>
+            <ol>
+                <li>Nouvelle mesure :</li>
+            </ol>
+            <pre><code>Panier Moyen = DIVIDE([CA Total], [Nombre de Ventes], 0)</code></pre>
+            <p>La fonction DIVIDE gère automatiquement les divisions par zéro</p>
+        </div>
+
+        <div class="step">
+            <p class="step-number">6.4 - Créer une mesure "Nombre de clients uniques"</p>
+            <ol>
+                <li>Nouvelle mesure :</li>
+            </ol>
+            <pre><code>Clients Uniques = DISTINCTCOUNT(FactVentes[id_client_dim])</code></pre>
+        </div>
+
+        <div class="step">
+            <p class="step-number">6.5 - Utiliser les mesures</p>
+            <ol>
+                <li>Créez une <strong>Carte</strong> (Card) pour afficher le CA Total</li>
+                <li>Créez une autre carte pour le Panier Moyen</li>
+                <li>Créez une carte pour Nombre de Ventes</li>
+                <li>Créez une carte pour Clients Uniques</li>
+                <li>Positionnez ces 4 cartes en haut du rapport comme des KPI</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>Résultat attendu :</strong> Vous avez maintenant un tableau de bord complet avec :
+            <ul>
+                <li>4 cartes KPI en haut (CA Total, Panier Moyen, Nombre de Ventes, Clients Uniques)</li>
+                <li>2 segments interactifs (Année, Catégorie)</li>
+                <li>4 visualisations principales (CA par ville, CA par catégorie, Évolution mensuelle, Top 10 produits)</li>
+                <li>Interactivité complète entre tous les visuels</li>
+            </ul>
+        </div>
+
+        <h3>🔹 Étape 7 : Mise en forme et design professionnel</h3>
+
+        <div class="step">
+            <p class="step-number">7.1 - Choisir un thème</p>
+            <ol>
+                <li>Dans le ruban <strong>Affichage</strong>, cliquez sur <strong>Thèmes</strong></li>
+                <li>Sélectionnez un thème professionnel (ex : "Executive")</li>
+                <li>Tous les visuels adoptent automatiquement les couleurs du thème</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">7.2 - Ajouter un titre au rapport</p>
+            <ol>
+                <li>Dans le ruban <strong>Insertion</strong>, cliquez sur <strong>Zone de texte</strong></li>
+                <li>Tapez : "Dashboard Ventes TechStore - Analyse E-commerce"</li>
+                <li>Formatez en grand, gras, couleur de thème</li>
+                <li>Positionnez en haut du rapport</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">7.3 - Aligner les visuels</p>
+            <ol>
+                <li>Sélectionnez plusieurs visuels (maintenez Ctrl)</li>
+                <li>Dans le ruban <strong>Format</strong>, utilisez les options <strong>Aligner</strong></li>
+                <li>Utilisez <strong>Distribuer horizontalement</strong> et <strong>Distribuer verticalement</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">7.4 - Ajuster les tailles</p>
+            <ol>
+                <li>Les KPI (cartes) doivent être petits et alignés horizontalement</li>
+                <li>Les graphiques principaux doivent occuper l'espace restant de manière équilibrée</li>
+                <li>Laissez des marges entre les visuels pour une meilleure lisibilité</li>
+            </ol>
+        </div>
+
+        <h3>🔹 Étape 8 : Sauvegarder et partager</h3>
+
+        <div class="step">
+            <p class="step-number">8.1 - Sauvegarder le fichier</p>
+            <ol>
+                <li>Cliquez sur <strong>Fichier</strong> → <strong>Enregistrer</strong></li>
+                <li>Nommez le fichier : <code>Dashboard_Ventes_TechStore.pbix</code></li>
+                <li>Choisissez un emplacement approprié</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">8.2 - Exporter en PDF</p>
+            <ol>
+                <li>Cliquez sur <strong>Fichier</strong> → <strong>Exporter</strong> → <strong>Exporter au format PDF</strong></li>
+                <li>Configurez les options d'export</li>
+                <li>Cliquez sur <strong>Exporter</strong></li>
+                <li>Ce PDF peut être partagé avec les décideurs</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">8.3 - Publier sur Power BI Service (optionnel)</p>
+            <ol>
+                <li>Si vous avez un compte Power BI, cliquez sur <strong>Publier</strong></li>
+                <li>Sélectionnez un espace de travail</li>
+                <li>Le rapport sera accessible en ligne et partageable par lien</li>
+                <li>Vous pourrez configurer des rafraîchissements automatiques des données</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Bonnes pratiques Power BI :</strong>
+            <ul>
+                <li><strong>Limiter le nombre de visuels :</strong> 5-8 par page maximum pour éviter la surcharge cognitive</li>
+                <li><strong>Utiliser des couleurs cohérentes :</strong> Appliquer un thème et s'y tenir</li>
+                <li><strong>Prioriser les KPI :</strong> Les métriques importantes doivent être visibles en premier</li>
+                <li><strong>Ajouter des info-bulles :</strong> Expliquer les métriques complexes avec des tooltips</li>
+                <li><strong>Tester l'interactivité :</strong> Vérifier que les filtres fonctionnent correctement</li>
+                <li><strong>Optimiser les performances :</strong> Limiter les mesures DAX complexes si le rapport est lent</li>
+            </ul>
+        </div>
+
+        <h3>🔹 Étape 9 : Créer une page de détails (drill-through)</h3>
+
+        <p>Pour une analyse approfondie, créons une page de détails accessible en cliquant sur un élément.</p>
+
+        <div class="step">
+            <p class="step-number">9.1 - Créer une nouvelle page</p>
+            <ol>
+                <li>En bas de l'écran, cliquez sur le <strong>+</strong> pour ajouter une page</li>
+                <li>Renommez-la "Détails Produit"</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">9.2 - Configurer le drill-through</p>
+            <ol>
+                <li>Dans le panneau Visualisations, trouvez la section <strong>Filtres de la page</strong></li>
+                <li>Glissez <strong>DimProduit.nom_produit</strong> vers la zone <strong>Drill-through</strong></li>
+                <li>Cochez <strong>Conserver tous les filtres</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">9.3 - Ajouter des visuels détaillés</p>
+            <ol>
+                <li>Ajoutez un <strong>Tableau</strong> montrant toutes les ventes du produit sélectionné</li>
+                <li>Ajoutez un graphique en courbes de l'évolution des ventes de ce produit dans le temps</li>
+                <li>Ajoutez une carte montrant le CA total du produit</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <p class="step-number">9.4 - Tester le drill-through</p>
+            <ol>
+                <li>Revenez à la première page</li>
+                <li>Clic droit sur une barre du Top 10 produits</li>
+                <li>Sélectionnez <strong>Drill-through</strong> → <strong>Détails Produit</strong></li>
+                <li>La page de détails s'affiche, filtrée sur le produit sélectionné</li>
+                <li>Cliquez sur la flèche de retour en haut à gauche pour revenir</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>Fonctionnalité avancée :</strong> Le drill-through permet aux utilisateurs d'explorer les données en profondeur sans surcharger le tableau de bord principal. C'est une fonctionnalité très appréciée par les analystes métier.
+        </div>
+
+        <h2>Livrables du TP</h2>
+
+        <p>À la fin de ce TP, vous devez avoir produit et sauvegardé les fichiers suivants :</p>
+
+        <table>
+            <tr>
+                <th>Catégorie</th>
+                <th>Fichier</th>
+                <th>Description</th>
+                <th>Emplacement</th>
+            </tr>
+            <tr>
+                <td rowspan="4"><strong>Scripts SQL</strong></td>
+                <td>01_create_oltp.sql</td>
+                <td>Script de création de la base OLTP</td>
+                <td>/sql/</td>
+            </tr>
+            <tr>
+                <td>02_create_dwh.sql</td>
+                <td>Script de création du Data Warehouse</td>
+                <td>/sql/</td>
+            </tr>
+            <tr>
+                <td>03_queries_olap.sql</td>
+                <td>Requêtes d'analyse OLAP</td>
+                <td>/sql/</td>
+            </tr>
+            <tr>
+                <td>04_verification.sql</td>
+                <td>Requêtes de vérification des données</td>
+                <td>/sql/</td>
+            </tr>
+            <tr>
+                <td rowspan="4"><strong>Fichiers CSV</strong></td>
+                <td>clients.csv</td>
+                <td>10 000 clients générés</td>
+                <td>/data/</td>
+            </tr>
+            <tr>
+                <td>produits.csv</td>
+                <td>500 produits générés</td>
+                <td>/data/</td>
+            </tr>
+            <tr>
+                <td>commandes.csv</td>
+                <td>20 000 commandes générées</td>
+                <td>/data/</td>
+            </tr>
+            <tr>
+                <td>lignes_commandes.csv</td>
+                <td>100 000 lignes de commandes</td>
+                <td>/data/</td>
+            </tr>
+            <tr>
+                <td><strong>Script Python</strong></td>
+                <td>generate_data.py</td>
+                <td>Script de génération des données</td>
+                <td>/scripts/</td>
+            </tr>
+            <tr>
+                <td rowspan="4"><strong>Pentaho Transformations</strong></td>
+                <td>dim_client.ktr</td>
+                <td>Transformation pour DimClient</td>
+                <td>/pentaho/transformations/</td>
+            </tr>
+            <tr>
+                <td>dim_produit.ktr</td>
+                <td>Transformation pour DimProduit</td>
+                <td>/pentaho/transformations/</td>
+            </tr>
+            <tr>
+                <td>dim_date.ktr</td>
+                <td>Transformation pour DimDate</td>
+                <td>/pentaho/transformations/</td>
+            </tr>
+            <tr>
+                <td>fact_ventes.ktr</td>
+                <td>Transformation pour FactVentes</td>
+                <td>/pentaho/transformations/</td>
+            </tr>
+            <tr>
+                <td><strong>Pentaho Job</strong></td>
+                <td>job_etl_complet.kjb</td>
+                <td>Job d'orchestration complet</td>
+                <td>/pentaho/jobs/</td>
+            </tr>
+            <tr>
+                <td><strong>Power BI</strong></td>
+                <td>Dashboard_Ventes_TechStore.pbix</td>
+                <td>Rapport Power BI interactif</td>
+                <td>/powerbi/</td>
+            </tr>
+            <tr>
+                <td><strong>Documentation</strong></td>
+                <td>Dashboard_Ventes_TechStore.pdf</td>
+                <td>Export PDF du dashboard</td>
+                <td>/documentation/</td>
+            </tr>
+            <tr>
+                <td><strong>Rapport Final</strong></td>
+                <td>Rapport_TP_BI.pdf</td>
+                <td>Document expliquant votre démarche et vos conclusions</td>
+                <td>/documentation/</td>
+            </tr>
+        </table>
+
+        <h3>🔹 Structure de dossiers recommandée</h3>
+
+        <pre><code>TP_Pipeline_OLTP_ETL_DWH_PowerBI/
+│
+├── sql/
+│   ├── 01_create_oltp.sql
+│   ├── 02_create_dwh.sql
+│   ├── 03_queries_olap.sql
+│   └── 04_verification.sql
+│
+├── data/
+│   ├── clients.csv
+│   ├── produits.csv
+│   ├── commandes.csv
+│   └── lignes_commandes.csv
+│
+├── scripts/
+│   └── generate_data.py
+│
+├── pentaho/
+│   ├── transformations/
+│   │   ├── dim_client.ktr
+│   │   ├── dim_produit.ktr
+│   │   ├── dim_date.ktr
+│   │   └── fact_ventes.ktr
+│   └── jobs/
+│       └── job_etl_complet.kjb
+│
+├── powerbi/
+│   └── Dashboard_Ventes_TechStore.pbix
+│
+├── documentation/
+│   ├── Dashboard_Ventes_TechStore.pdf
+│   ├── Rapport_TP_BI.pdf
+│   └── Captures_Ecran/
+│       ├── pentaho_dim_client.png
+│       ├── pentaho_fact_ventes.png
+│       ├── powerbi_dashboard.png
+│       └── ...
+│
+└── README.md</code></pre>
+
+        <h3>🔹 Contenu du rapport final</h3>
+
+        <p>Votre rapport PDF final (Rapport_TP_BI.pdf) doit contenir :</p>
+
+        <ol>
+            <li><strong>Page de garde</strong> : Titre, nom, date, formation</li>
+            <li><strong>Résumé exécutif</strong> (1 page) : Vue d'ensemble du projet, objectifs, résultats clés</li>
+            <li><strong>Introduction</strong> : Contexte de TechStore, problématique métier</li>
+            <li><strong>Architecture technique</strong> : Diagramme de l'architecture, technologies utilisées</li>
+            <li><strong>Modélisation OLTP</strong> : Description des tables, ERD, justification des choix</li>
+            <li><strong>Génération des données</strong> : Méthodologie, volumes, répartition</li>
+            <li><strong>Modélisation du DWH</strong> : Schéma en étoile, justification, avantages</li>
+            <li><strong>Processus ETL avec Pentaho</strong> : Description de chaque transformation, captures d'écran, logs d'exécution</li>
+            <li><strong>Analyses OLAP</strong> : Résultats des requêtes SQL, interprétation métier</li>
+            <li><strong>Visualisations Power BI</strong> : Captures du dashboard, explication de chaque visuel, insights métier</li>
+            <li><strong>Conclusions et recommandations</strong> : Synthèse, apprentissages, améliorations possibles</li>
+            <li><strong>Annexes</strong> : Scripts complets, logs d'exécution, difficultés rencontrées</li>
+        </ol>
+
+        <div class="note">
+            <strong>Conseil :</strong> Prenez des captures d'écran à chaque étape importante du TP. Elles seront précieuses pour illustrer votre rapport et prouver que vous avez effectivement réalisé toutes les étapes.
+        </div>
+
+        
+        
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #1a73e8;">
+
+        <p style="text-align: center; color: #6c757d; font-size: 0.9em;">
+            <strong>TP réalisé par :</strong> ahmedamamou<br>
+            <strong>Date :</strong> 2025-11-18<br>
+            <strong>Version :</strong> 1.0 - TP Complet Pipeline OLTP → ETL → DWH → Power BI
+        </p>
+
+    </div>
+</body>
+</html>

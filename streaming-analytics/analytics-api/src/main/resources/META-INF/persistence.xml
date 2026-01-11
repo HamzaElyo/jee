@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+             https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="streamingAnalyticsPU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        
+        <class>com.streaming.analytics.model.ViewEvent</class>
+        <class>com.streaming.analytics.model.VideoStats</class>
+        <class>com.streaming.analytics.model.UserProfile</class>
+        <class>com.streaming.analytics.model.Video</class>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        
+        <properties>
+            <!-- Configuration MongoDB via EclipseLink NoSQL -->
+            <property name="eclipselink.target-database" value="org.eclipse.persistence.nosql.adapters.mongo.MongoPlatform"/>
+            <property name="eclipselink.nosql.connection-spec" value="org.eclipse.persistence.nosql.adapters.mongo.MongoConnectionSpec"/>
+            
+            <property name="eclipselink.nosql.property.mongo.port" value="27017"/>
+            <property name="eclipselink.nosql.property.mongo.host" value="localhost"/>
+            <property name="eclipselink.nosql.property.mongo.db" value="streaming_analytics"/>
+            
+            <!-- Auth (A verifier selon driver, souvent pas besoin si localhost/docker network interne sans auth par defaut, ou via URI) -->
+            <property name="eclipselink.nosql.property.mongo.user" value="admin"/>
+            <property name="eclipselink.nosql.property.mongo.password" value="admin123"/>
+            
+            <property name="eclipselink.logging.level" value="FINE"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>

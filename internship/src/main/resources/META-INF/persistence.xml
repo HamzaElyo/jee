@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Corrected root element with schema for validation -->
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd"
+             version="3.1">
+
+
+    <persistence-unit name="InternshipPU" transaction-type="JTA">
+
+        <class>com.school.internship.entity.Company</class>
+        <class>com.school.internship.entity.Internship</class>
+        <class>com.school.internship.entity.Student</class>
+
+        <properties>
+            <property name="hibernate.hikari.jdbcUrl" value="jdbc:mysql://localhost:3306/stagiaire?createDatabaseIfNotExist=true&amp;serverTimezone=UTC" />
+            <property name="hibernate.hikari.username" value="user" />
+            <property name="hibernate.hikari.password" value="" />
+            <property name="hibernate.hikari.maximumPoolSize" value="10" />
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.connection.provider_class" value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+        </properties>
+
+
+    </persistence-unit>
+</persistence>
