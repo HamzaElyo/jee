@@ -16,7 +16,7 @@ import java.util.Map;
 @ApplicationScoped
 public class YouTubeService {
 
-    private static final String API_KEY = "AIzaSyAfs6dddopZdfp-1lsyPATRsrs4s5kcHQY";
+    private static final String API_KEY = "AIzaSyAfsyPATRsrs4s5kcHQY";
     private static final String BASE_URL = "https://www.googleapis.com/youtube/v3";
 
     /**
