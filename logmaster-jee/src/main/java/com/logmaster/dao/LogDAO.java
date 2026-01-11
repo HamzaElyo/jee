@@ -29,7 +29,7 @@ public class LogDAO {
                 try {
                         // In production, this URI should come from configuration
                         mongoClient = MongoClients.create(
-                                        "mongodb+srv://elyoussoufihamza:Hamzael123@cluster0.i5tlvj3.mongodb.net/?appName=Cluster0");
+                                        "mongodb+srv://@cluster0.i5tlvj3.mongodb.net/?appName=Cluster0");
                         database = mongoClient.getDatabase("logmaster_db");
                         logsCollection = database.getCollection("application_logs");
 
