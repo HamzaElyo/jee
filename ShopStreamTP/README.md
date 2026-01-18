@@ -18,7 +18,3 @@ Ce TP couvre les concepts de:
 ## 👤 Auteur
 
 **HamzaElyo** - Projet JEE S9 UEMF
-
-## 📄 License
-
-MIT License
