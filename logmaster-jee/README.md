@@ -78,6 +78,4 @@ $WILDFLY_HOME/bin/standalone.bat
 
 **HamzaElyo** - Projet JEE S9 UEMF
 
-## 📄 License
 
-MIT License
