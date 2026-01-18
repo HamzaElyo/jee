@@ -63,6 +63,3 @@ cp target/energy.war $WILDFLY_HOME/standalone/deployments/
 
 **HamzaElyo** - Projet JEE S9 UEMF
 
-## 📄 License
-
-MIT License
