@@ -140,6 +140,3 @@ Open University Learning Analytics Dataset:
 
 ---
 
-## 📄 License
-
-MIT License
