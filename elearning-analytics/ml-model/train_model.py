@@ -1,6 +1,6 @@
 """
 Script d'entraînement du modèle Random Forest pour la prédiction de risque étudiant
-Basé sur le dataset OULAD (Open University Learning Analytics Dataset)
+Utilise les vraies données OULAD depuis les fichiers CSV
 """
 
 import pandas as pd
@@ -12,68 +12,126 @@ from sklearn.metrics import classification_report, accuracy_score
 import joblib
 import os
 
-# Simuler des données OULAD pour l'entraînement
-# Dans un vrai cas, charger depuis MongoDB ou CSV
-def generate_training_data(n_samples=5000):
+# Chemin vers les données OULAD
+DATA_PATH = "../data/oulad"
+
+def load_oulad_data():
     """
-    Génère des données d'entraînement simulées basées sur OULAD
-    Features: totalClicks, activeDays, numAssessments
-    Target: riskLevel (Critical, High, Medium, Low)
+    Charge les données OULAD depuis les fichiers CSV
     """
-    np.random.seed(42)
+    print("📂 Chargement des données OULAD depuis CSV...")
     
-    # Générer des features
-    data = {
-        'totalClicks': np.random.exponential(scale=500, size=n_samples).astype(int),
-        'activeDays': np.random.exponential(scale=30, size=n_samples).astype(int),
-        'numAssessments': np.random.randint(0, 20, size=n_samples),
-        'avgScore': np.random.normal(loc=60, scale=20, size=n_samples).clip(0, 100),
-    }
+    # 1. Charger studentVle (activité des étudiants sur le VLE)
+    print("   📊 Chargement studentVle.csv (peut prendre un moment)...")
+    vle_path = os.path.join(DATA_PATH, "studentVle.csv")
+    student_vle = pd.read_csv(vle_path)
     
-    df = pd.DataFrame(data)
+    # Agréger par étudiant: totalClicks et activeDays
+    print("   🔄 Agrégation des clicks par étudiant...")
+    vle_agg = student_vle.groupby('id_student').agg({
+        'sum_click': 'sum',
+        'date': 'nunique'  # Nombre de jours uniques d'activité
+    }).reset_index()
+    vle_agg.columns = ['id_student', 'totalClicks', 'activeDays']
     
-    # Calculer un score de risque basé sur les features
-    risk_score = (
-        (df['totalClicks'] < 200).astype(int) * 30 +
-        (df['activeDays'] < 10).astype(int) * 25 +
-        (df['numAssessments'] < 5).astype(int) * 25 +
-        (df['avgScore'] < 50).astype(int) * 20
-    )
+    print(f"   ✅ {len(vle_agg)} étudiants avec activité VLE")
     
-    # Ajouter du bruit
-    risk_score += np.random.randint(-10, 10, size=n_samples)
-    risk_score = risk_score.clip(0, 100)
+    # 2. Charger studentInfo (infos étudiants avec finalResult)
+    print("   👥 Chargement studentInfo.csv...")
+    info_path = os.path.join(DATA_PATH, "studentInfo.csv")
+    student_info = pd.read_csv(info_path)
     
-    # Convertir en catégories
-    def get_risk_level(score):
-        if score >= 70: return 'Critical'
-        elif score >= 50: return 'High'
-        elif score >= 30: return 'Medium'
-        else: return 'Low'
+    # Garder les colonnes utiles
+    student_info = student_info[['id_student', 'code_module', 'code_presentation', 
+                                   'final_result', 'region', 'studied_credits']]
     
-    df['riskLevel'] = risk_score.apply(get_risk_level)
+    print(f"   ✅ {len(student_info)} enregistrements étudiants")
+    
+    # 3. Charger studentAssessment (évaluations)
+    print("   📝 Chargement studentAssessment.csv...")
+    assessment_path = os.path.join(DATA_PATH, "studentAssessment.csv")
+    student_assessment = pd.read_csv(assessment_path)
+    
+    # Agréger par étudiant: nombre d'évaluations et score moyen
+    assessment_agg = student_assessment.groupby('id_student').agg({
+        'id_assessment': 'count',
+        'score': 'mean'
+    }).reset_index()
+    assessment_agg.columns = ['id_student', 'numAssessments', 'avgScore']
+    assessment_agg['avgScore'] = assessment_agg['avgScore'].fillna(50)
+    
+    print(f"   ✅ {len(assessment_agg)} étudiants avec évaluations")
+    
+    # 4. Joindre toutes les données
+    print("   🔗 Fusion des données...")
+    
+    # Joindre VLE avec Info
+    df = vle_agg.merge(student_info, on='id_student', how='inner')
+    
+    # Joindre avec Assessments
+    df = df.merge(assessment_agg, on='id_student', how='left')
+    
+    # Remplir les valeurs manquantes
+    df['numAssessments'] = df['numAssessments'].fillna(0).astype(int)
+    df['avgScore'] = df['avgScore'].fillna(50.0)
+    
+    # 5. Créer les labels de risque basés sur final_result
+    print("   🏷️ Création des labels de risque...")
+    
+    def get_risk_from_result(result):
+        if result == "Withdrawn":
+            return "Critical"
+        elif result == "Fail":
+            return "High"
+        elif result == "Pass":
+            return "Medium"
+        elif result == "Distinction":
+            return "Low"
+        else:
+            return "Medium"
+    
+    df["riskLevel"] = df["final_result"].apply(get_risk_from_result)
+    
+    # Supprimer les doublons (garder le premier enregistrement par étudiant)
+    df = df.drop_duplicates(subset=['id_student'], keep='first')
+    
+    print(f"\n✅ Dataset final: {len(df)} étudiants")
+    print(f"   Distribution des risques:")
+    print(df["riskLevel"].value_counts())
     
     return df
 
+
 def train_model():
-    """Entraîne et sauvegarde le modèle Random Forest"""
-    print("📊 Génération des données d'entraînement...")
-    df = generate_training_data(5000)
+    """Entraîne et sauvegarde le modèle Random Forest avec données OULAD"""
+    
+    # Charger les vraies données
+    df = load_oulad_data()
+    
+    if len(df) == 0:
+        print("❌ Aucune donnée trouvée!")
+        return
     
     # Préparer les features et le target
-    X = df[['totalClicks', 'activeDays', 'numAssessments', 'avgScore']]
+    features = ['totalClicks', 'activeDays', 'numAssessments', 'avgScore']
+    X = df[features]
     y = df['riskLevel']
     
     # Encoder les labels
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
     
+    print(f"\n📊 Features: {features}")
+    print(f"📊 Classes: {list(le.classes_)}")
+    
     # Split train/test
     X_train, X_test, y_train, y_test = train_test_split(
         X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
     )
     
-    print("🌲 Entraînement du modèle Random Forest...")
+    print(f"\n🔀 Split: {len(X_train)} train, {len(X_test)} test")
+    
+    print("\n🌲 Entraînement du modèle Random Forest...")
     model = RandomForestClassifier(
         n_estimators=100,
         max_depth=10,
@@ -94,14 +152,17 @@ def train_model():
     joblib.dump(model, 'model.pkl')
     joblib.dump(le, 'label_encoder.pkl')
     
-    # Sauvegarder les importances des features
-    feature_importance = dict(zip(X.columns, model.feature_importances_))
+    # Afficher les importances des features
+    feature_importance = dict(zip(features, model.feature_importances_))
     print("\n🔍 Importance des features:")
     for feat, imp in sorted(feature_importance.items(), key=lambda x: -x[1]):
-        print(f"  {feat}: {imp:.3f}")
+        print(f"   {feat}: {imp:.3f}")
     
     print("\n✅ Modèle sauvegardé: model.pkl")
     print("✅ Encoder sauvegardé: label_encoder.pkl")
+    
+    return model, le
+
 
 if __name__ == "__main__":
     train_model()

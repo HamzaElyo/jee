@@ -20,9 +20,8 @@ import java.nio.charset.StandardCharsets;
 @ApplicationScoped
 public class HuggingFaceService {
 
-    // URL du Hugging Face Space - Gradio API endpoint (correct format pour Gradio
-    // 5/6)
-    private static final String HF_SPACE_BASE = "https://hamzaelyo-elearning.hf.space/gradio_api/call/predict_risk";
+    // URL du Hugging Face Space - Gradio API endpoint
+    private static final String HF_SPACE_BASE = "https://hamzaelyo-elearning.hf.space/gradio_api/call/predict";
 
     // Timeout en millisecondes
     private static final int TIMEOUT_MS = 30000;

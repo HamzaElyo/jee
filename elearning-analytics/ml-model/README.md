@@ -1,24 +1,54 @@
-# Student Risk Prediction API - Hugging Face Space
+---
+title: Student Risk Prediction
+emoji: 🎓
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: "5.9.1"
+app_file: app.py
+pinned: false
+---
 
-Ce dossier contient le code pour déployer un modèle ML de prédiction de risque étudiant sur Hugging Face Spaces.
+# 🎓 Student Risk Prediction
 
-## Fichiers
+Prédit le niveau de risque de décrochage d'un étudiant basé sur son engagement.
 
-- `app.py` - Application Gradio avec API de prédiction
-- `train_model.py` - Script d'entraînement du modèle (exécuter une fois)
-- `requirements.txt` - Dépendances Python
+## Modèle
 
-## Déploiement sur Hugging Face Spaces
+- **Algorithme**: Random Forest (100 arbres)
+- **Dataset**: OULAD (Open University Learning Analytics Dataset)
+- **Accuracy**: 64%
 
-1. Créer un compte sur https://huggingface.co
-2. Créer un nouveau Space (SDK: Gradio)
-3. Uploader les fichiers: `app.py`, `requirements.txt`, `model.pkl`
-4. L'URL de l'API sera: `https://YOUR_USERNAME-YOUR_SPACE.hf.space/api/predict`
+## Features
 
-## Test local
+| Feature | Description |
+|---------|-------------|
+| Total Clicks | Nombre de clicks sur la plateforme |
+| Active Days | Jours d'activité |
+| Assessments | Évaluations complétées |
+| Avg Score | Score moyen (0-100) |
 
-```bash
-pip install -r requirements.txt
-python train_model.py  # Entraîner le modèle d'abord
-python app.py          # Lancer l'app
+## Output
+
+- **Risk Level**: Critical, High, Medium, Low
+- **Risk Score**: 0-100%
+- **Probabilities**: Pour chaque niveau
+
+## API Usage
+
+```python
+from gradio_client import Client
+
+client = Client("HamzaElyo/elearning")
+result = client.predict(
+    total_clicks=500,
+    active_days=30,
+    num_assessments=10,
+    avg_score=65,
+    api_name="/predict"
+)
 ```
+
+## Author
+
+HamzaElyo - UEMF S9 JEE Project
